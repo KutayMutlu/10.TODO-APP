@@ -1,76 +1,20 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import './App.css'
 import TodoCreate from './components/TodoCreate'
 import TodoList from './components/TodoList'
 import { ToastContainer, toast } from 'react-toastify';
 import { FaSun, FaMoon } from "react-icons/fa";
-import { IoMdSettings } from "react-icons/io"; // Ayarlar ikonu
+import { IoMdSettings } from "react-icons/io";
 import { motion, AnimatePresence } from 'framer-motion';
 import "react-toastify/dist/ReactToastify.css";
 import ProgressBar from './components/ProgressBar';
 import TodoFilter from './components/TodoFilter';
 import Swal from 'sweetalert2';
+import { translations } from './constants';
 
-// DND KIT IMPORTLARI
+// DND KIT
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
-
-const translations = {
-  tr: {
-    header: "To-Do List",
-    completedTitle: "Tamamlanan Hedefler",
-    emptyWarn: "Lütfen bir hedef giriniz! ⚠️",
-    deleteConfirm: "Bu hedefi silmek istediğinize emin misiniz? 🗑️",
-    confirmAllDelete: "Tüm hedefleri silmek istediğinize emin misiniz? 🗑️",
-    confirmArchive: "Tamamlanan tüm hedefleri arşive taşımak istiyor musunuz? 📦",
-    addSuccess: "Hedef başarıyla eklendi! 🚀",
-    deleteSuccess: "Hedef başarıyla silindi! 🗑️",
-    updateSuccess: "Hedefiniz güncellendi! ✅",
-    updateWarn: "Görev içeriği boş bırakılamaz! ⚠️",
-    congrats: "Tebrikler hedefinizi tamamladınız! 😊",
-    noTodos: "Henüz bir hedefiniz yok. Hadi bir tane ekleyin! ✨",
-    footerText: "Designed & Developed by",
-    placeholder: "Bir hedef giriniz...",
-    buttonText: "HEDEF EKLE",
-    all: "Hepsi",
-    active: "Yapılacaklar",
-    completed: "Tamamlananlar",
-    archive: "Arşiv",
-    clearAll: "Tümünü Sil",
-    clearCompleted: "Tamamlananları Arşivle",
-    progressText: "İlerleme Durumu",
-    progressCompleted: "Tamamlanan",
-    settings: "Ayarlar",
-    soundEffects: "Ses Efektleri"
-  },
-  en: {
-    header: "To-Do List",
-    completedTitle: "Completed Tasks",
-    emptyWarn: "Please enter a task! ⚠️",
-    deleteConfirm: "Are you sure you want to delete this task? 🗑️",
-    confirmAllDelete: "Are you sure you want to delete all tasks? 🗑️",
-    confirmArchive: "Do you want to move all completed tasks to archive? 📦",
-    addSuccess: "Task added successfully! 🚀",
-    deleteSuccess: "Task deleted successfully! 🗑️",
-    updateSuccess: "Task updated successfully! ✅",
-    updateWarn: "Task content cannot be empty! ⚠️",
-    congrats: "Congratulations, you completed your goal! 😊",
-    noTodos: "No tasks yet. Let's add one! ✨",
-    footerText: "Designed & Developed by",
-    placeholder: "Enter a task...",
-    buttonText: "ADD TASK",
-    all: "All",
-    active: "Active",
-    completed: "Completed",
-    archive: "Archive",
-    clearAll: "Clear All",
-    clearCompleted: "Archive Completed",
-    progressText: "Progress Status",
-    progressCompleted: "Completed",
-    settings: "Settings",
-    soundEffects: "Sound Effects"
-  }
-};
 
 function App() {
   const [lang, setLang] = useState(() => {
@@ -79,24 +23,19 @@ function App() {
     return navigator.language.startsWith('tr') ? 'tr' : 'en';
   });
 
-  // 2. KONTROL: Dil değiştiğinde localStorage güncelle
-  useEffect(() => {
-    localStorage.setItem("lang", lang);
-  }, [lang]);
-
-  const t = translations[lang]; // useMemo yerine direkt state'ten besleniyor
   const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "light");
   const [filter, setFilter] = useState("all");
   const [showSettings, setShowSettings] = useState(false);
-
-  const [darkMode, setDarkMode] = useState(false);
-
-
-  // 1. KONTROL: Ses ayarının yüklenmesi
   const [isSoundEnabled, setIsSoundEnabled] = useState(() => {
     const savedSound = localStorage.getItem("soundEnabled");
     return savedSound !== null ? JSON.parse(savedSound) : true;
   });
+
+  const t = translations[lang];
+
+  useEffect(() => {
+    localStorage.setItem("lang", lang);
+  }, [lang]);
 
   useEffect(() => {
     if (theme === "dark") document.body.classList.add("dark");
@@ -104,7 +43,6 @@ function App() {
     localStorage.setItem("theme", theme);
   }, [theme]);
 
-  // 2. KONTROL: Ses tercihinin kaydedilmesi
   useEffect(() => {
     localStorage.setItem("soundEnabled", JSON.stringify(isSoundEnabled));
   }, [isSoundEnabled]);
@@ -125,16 +63,15 @@ function App() {
     useSensor(KeyboardSensor)
   );
 
+  // TEMİZLENMİŞ SES FONKSİYONU
   const playSound = (soundName) => {
-    // Ses kontrolü burada devreye giriyor
     if (!isSoundEnabled) return;
-
     try {
       const audio = new Audio(`/sounds/${soundName}.mp3`);
       audio.volume = 0.3;
-      audio.play().catch(error => console.log("Ses çalma engellendi"));
+      audio.play().catch(() => { /* Tarayıcı engeli için sessiz hata yönetimi */ });
     } catch (e) {
-      console.error("Ses dosyası bulunamadı.");
+      // Hata yönetimi sessizce geçiliyor
     }
   };
 
@@ -150,19 +87,21 @@ function App() {
   };
 
   const handleAddTodo = (newTodo) => {
-    if (newTodo.content.trim() === "") {
+    if (!newTodo.content || newTodo.content.trim() === "") {
       playSound('warn');
       toast.warn(t.emptyWarn);
       return;
     }
+
     const todoWithDate = {
       ...newTodo,
       isCompleted: false,
       isArchived: false,
       createdAt: Date.now()
     };
+
     playSound('add');
-    setTodos([...todos, todoWithDate]);
+    setTodos([todoWithDate, ...todos]);
     toast.info(t.addSuccess);
   }
 
@@ -173,7 +112,11 @@ function App() {
   }
 
   const updateTodo = (newTodo) => {
-    if (newTodo.content.trim() === "") { toast.warn(t.updateWarn); return; }
+    if (!newTodo.content || newTodo.content.trim() === "") {
+      playSound('warn');
+      toast.warn(t.updateWarn || t.emptyWarn);
+      return;
+    }
     setTodos(todos.map((todo) => todo.id !== newTodo.id ? todo : newTodo));
     toast.success(t.updateSuccess);
   }
@@ -189,7 +132,7 @@ function App() {
         const newStatus = !todo.isCompleted;
         if (newStatus) {
           playSound('add');
-          toast.success(t.congrats, { icon: "😊", position: "top-right" });
+          toast.success(t.congrats, { icon: "😊" });
         }
         return { ...todo, isCompleted: newStatus };
       }
@@ -202,11 +145,11 @@ function App() {
       title: t.confirmAllDelete,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#7d5fff',
+      confirmButtonColor: '#6c63ff',
       cancelButtonColor: '#d33',
       confirmButtonText: lang === 'tr' ? 'Evet, sil!' : 'Yes, delete!',
       cancelButtonText: lang === 'tr' ? 'İptal' : 'Cancel',
-      background: theme === 'dark' ? '#1e1e1e' : '#fff',
+      background: theme === 'dark' ? '#2d3436' : '#fff',
       color: theme === 'dark' ? '#fff' : '#000',
     }).then((result) => {
       if (result.isConfirmed) {
@@ -228,10 +171,10 @@ function App() {
       title: lang === 'tr' ? 'Tamamlananlar Arşivlensin mi?' : 'Archive Completed?',
       icon: 'info',
       showCancelButton: true,
-      confirmButtonColor: '#7d5fff',
+      confirmButtonColor: '#6c63ff',
       confirmButtonText: lang === 'tr' ? 'Evet, arşivle!' : 'Yes, archive!',
       cancelButtonText: lang === 'tr' ? 'Vazgeç' : 'Cancel',
-      background: theme === 'dark' ? '#1e1e1e' : '#fff',
+      background: theme === 'dark' ? '#2d3436' : '#fff',
       color: theme === 'dark' ? '#fff' : '#000',
     }).then((result) => {
       if (result.isConfirmed) {
@@ -260,7 +203,6 @@ function App() {
   const completedCount = activeTodosOnly.filter(t => t.isCompleted).length;
   const progressPercentage = totalTodos > 0 ? (completedCount / totalTodos) * 100 : 0;
 
-  // 3. KONTROL: Sistem kontrollerinin render edilmesi
   return (
     <div className='App'>
       <div className="system-controls">
@@ -287,6 +229,8 @@ function App() {
                     <option value="tr">Türkçe 🇹🇷</option>
                     <option value="en">English 🇺🇸</option>
                   </select>
+                </div>
+                <div className="setting-item">
                   <span>{t.soundEffects}</span>
                   <div
                     className={`switch ${isSoundEnabled ? 'on' : 'off'}`}
@@ -310,7 +254,7 @@ function App() {
       <div className='main'>
         {filter !== "archive" && (
           <>
-            <TodoCreate onCreateTodo={handleAddTodo} t={t} />
+            <TodoCreate onCreateTodo={handleAddTodo} t={t} playSound={playSound} />
             {totalTodos > 0 && <ProgressBar percentage={progressPercentage} t={t} />}
           </>
         )}
@@ -330,6 +274,7 @@ function App() {
             onUpdateTodo={updateTodo}
             onToggleComplete={toggleCompleteTodo}
             t={t}
+            playSound={playSound}
           />
         </DndContext>
 
@@ -340,7 +285,14 @@ function App() {
         )}
       </div>
 
-      <ToastContainer theme={theme === "dark" ? "dark" : "light"} limit={3} autoClose={2000} />
+      <ToastContainer
+        theme={theme === "dark" ? "dark" : "light"}
+        limit={3}
+        autoClose={2000}
+        position="top-right"
+        style={{ zIndex: 99999 }}
+      />
+
       <footer className="footer">
         <p>{t.footerText} <span className="footer-name">Kutay Mutlu</span></p>
       </footer>

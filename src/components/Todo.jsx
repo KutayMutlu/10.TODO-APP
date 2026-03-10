@@ -52,16 +52,22 @@ function Todo({ todo, onRemoveTodo, onUpdateTodo, onToggleComplete, t }) {
         }
     }, [editable]);
 
-    const handleUpdate = (e) => {
-        e.stopPropagation();
-        if (newTodo.trim() === "") {
+    const handleUpdate = () => {
+        // İçerik boş olsa bile App.jsx'e gönderiyoruz ki uyarı mekanizması çalışsın
+        const updatedTodo = {
+            ...todo,
+            content: newTodo // State'teki yeni (veya boş) içerik
+        };
+
+        onUpdateTodo(updatedTodo);
+
+        // Eğer içerik boş değilse düzenleme modundan çık
+        if (newTodo.trim() !== "") {
+            setEditable(false);
+        } else {
             setIsShaking(true);
             setTimeout(() => setIsShaking(false), 250);
-            return;
         }
-        // 2. KONTROL: Güncelleme sırasında isArchived durumu korunuyor
-        onUpdateTodo({ id, content: newTodo, isCompleted, createdAt, isArchived });
-        setEditable(false);
     }
 
     const handleRemoveRequest = (e) => {

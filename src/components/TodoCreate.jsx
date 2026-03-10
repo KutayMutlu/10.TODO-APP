@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import "../App.css";
+import { toast } from 'react-toastify';
 
 function TodoCreate({ onCreateTodo, t }) {
     const [newTodo, setNewTodo] = useState('');
@@ -13,7 +14,7 @@ function TodoCreate({ onCreateTodo, t }) {
         // Eğer input boşsa sallanma animasyonunu tetikle
         if (newTodo.trim() === "") {
             setIsShaking(true);
-            // CSS'teki .shake süresiyle (0.25s) uyumlu şekilde sıfırlıyoruz
+            onCreateTodo({ content: "" }); // App.jsx'teki handleAddTodo'yu tetikle, uyarıyı orası versin
             setTimeout(() => setIsShaking(false), 250);
             return;
         }
