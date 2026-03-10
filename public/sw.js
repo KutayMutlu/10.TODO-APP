@@ -1,56 +1,37 @@
-const CACHE_NAME = "kutay-todo-v7";
+const CACHE_NAME = "kutay-todo-v8";
 
-// Yükleme anında temel dosyaları önbelleğe al
 self.addEventListener("install", (event) => {
-    event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll([
-                "/",
-                "/index.html",
-                "/manifest.json",
-                "/logo.png",
-                "/sounds/add.mp3",
-                "/sounds/delete.mp3",
-                "/sounds/warn.mp3"
-            ]);
-        })
-    );
     self.skipWaiting();
 });
 
-// Aktivasyon anında eski cache'leri temizle
 self.addEventListener("activate", (event) => {
     event.waitUntil(
-        caches.keys().then((cacheNames) => {
-            return Promise.all(
-                cacheNames.map((cache) => {
-                    if (cache !== CACHE_NAME) {
-                        return caches.delete(cache);
-                    }
-                })
-            );
+        caches.keys().then((keys) => {
+            return Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)));
         })
     );
-    return self.clients.claim(); // Kontrolü hemen ele al
+    self.clients.claim();
 });
 
-// İNTERNET YOKSA ÖNBELLEKTEN GETİR (NETWORK-FIRST STRATEJİSİ)
 self.addEventListener("fetch", (event) => {
-    // Sadece kendi sitemizden gelen istekleri (sesler dahil) yakala
+    // Sadece kendi sitemizin isteklerini ve GET metotlarını yakala
+    if (event.request.method !== 'GET' || !event.request.url.startsWith(self.location.origin)) return;
+
     event.respondWith(
-        caches.match(event.request).then((cachedResponse) => {
-            if (cachedResponse) {
-                return cachedResponse; // Varsa hafızadan getir
-            }
-            return fetch(event.request).then((response) => {
-                // Ses dosyası veya resimse, gelecekte kullanmak üzere hafızaya at
-                if (event.request.url.includes('/sounds/')) {
-                    const resClone = response.clone();
-                    caches.open(CACHE_NAME).then((cache) => {
-                        cache.put(event.request, resClone);
-                    });
-                }
-                return response;
+        caches.open(CACHE_NAME).then((cache) => {
+            return cache.match(event.request).then((cachedResponse) => {
+                const fetchPromise = fetch(event.request).then((networkResponse) => {
+                    // Eğer internetten gelen cevap sağlamsa, cache'i güncelle
+                    if (networkResponse && networkResponse.status === 200) {
+                        cache.put(event.request, networkResponse.clone());
+                    }
+                    return networkResponse;
+                }).catch(() => {
+                    // Tamamen çevrimdışıysak ve cache'de yoksa hata verme, sessiz kal
+                });
+
+                // Varsa cache'den dön, yoksa internetten geleni bekle
+                return cachedResponse || fetchPromise;
             });
         })
     );
