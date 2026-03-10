@@ -547,7 +547,7 @@ body {
 }
 
 /* Arşiv ikonunun sapıtması ve rengi için */
-.dark .empty-state-container svg,
+.dark .empty-state-container,
 .dark .empty-state-container i,
 .dark .archive-icon {
     color: var(--todo-text) !important;
