@@ -79,6 +79,8 @@ function Todo({ todo, onRemoveTodo, onUpdateTodo, onToggleComplete, t }) {
         }, 250);
     }
 
+
+
     return (
         <div ref={setNodeRef} style={style} className={`todo-row-container ${isShaking ? 'shake' : ''}`}>
 

@@ -554,3 +554,29 @@ body {
     fill: var(--todo-text) !important;
     opacity: 1 !important;
 }
+
+/* Tıklandığında aktif olacak sınıf */
+.full-text {
+    white-space: normal !important;
+    /* Satır sarmayı aktif eder */
+    word-break: break-word;
+    /* Uzun kelimeleri böler */
+    max-height: 200px;
+    /* Çok uzunsa sonsuza gitmesin */
+    overflow-y: auto;
+    /* İçeride kaydırma çubuğu çıkarır */
+    display: block;
+    /* Blok element olarak davranmasını sağlar */
+    padding-right: 5px;
+    /* Kaydırma çubuğu için biraz boşluk */
+}
+
+/* İsteğe bağlı: Kaydırma çubuğunu güzelleştirme */
+.full-text::-webkit-scrollbar {
+    width: 4px;
+}
+
+.full-text::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 10px;
+}
