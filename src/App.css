@@ -580,3 +580,79 @@ body {
     background: var(--primary-color);
     border-radius: 10px;
 }
+
+/* =========================================
+   MOBİL CİHAZLAR İÇİN ÖZEL TAŞMA VE BOZULMA FİXİ
+   (iPhone XR, S20 Ultra ve benzeri genişlikler için)
+   ========================================= */
+
+@media (max-width: 480px) {
+
+    /* 1. Filtre Konteynırı: Butonların yan yana sıkışıp taşmasını engeller */
+    .filter-container {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        /* Sığmazsa 2. satıra atar */
+        gap: 6px !important;
+        justify-content: center !important;
+    }
+
+    /* 2. Filtre Butonları: Genişliği ekranın yarısına sabitler (2x2 dizilim) */
+    .filter-btn {
+        flex: 1 1 calc(50% - 10px) !important;
+        /* Her buton genişliğin yarısını kaplar */
+        min-width: 120px !important;
+        font-size: 11px !important;
+        padding: 8px 4px !important;
+        white-space: nowrap !important;
+        text-overflow: ellipsis;
+        overflow: hidden;
+    }
+
+    /* 3. Metin Alanı: Tıklandığında aşağı doğru uzama (Kutu içi scroll) */
+    .todo-lists {
+        align-items: flex-start !important;
+        /* Metin uzarsa ikonlar yukarıda kalsın */
+        min-width: 0 !important;
+        /* Flex taşma önleyici */
+    }
+
+    .truncated-text {
+        max-width: 160px !important;
+        /* Mobilde metin alanını kısıtla */
+    }
+
+    .full-text {
+        white-space: normal !important;
+        word-break: break-word !important;
+        max-height: 150px !important;
+        /* Çok uzun metinlerde kutu aşırı büyümesin */
+        overflow-y: auto !important;
+        /* Kutu içinde kaydırma yap */
+        display: block !important;
+    }
+
+    /* 4. Toplu İşlem Butonları (Hepsini Sil vb.) */
+    .bulk-actions {
+        gap: 6px !important;
+    }
+
+    .bulk-btn {
+        font-size: 11px !important;
+        padding: 10px 5px !important;
+        flex: 1 !important;
+    }
+
+    /* 5. Kartın kenar boşluklarını daraltarak içerik alanını genişlet */
+    .main {
+        padding: 15px 10px !important;
+    }
+}
+
+/* Çok dar ekranlar için (iPhone SE gibi) font ayarı */
+@media (max-width: 360px) {
+    .filter-btn {
+        font-size: 10px !important;
+        min-width: 100px !important;
+    }
+}
