@@ -1,4 +1,4 @@
-const CACHE_NAME = "kutay-todo-v4";
+const CACHE_NAME = "kutay-todo-v7";
 
 // Yükleme anında temel dosyaları önbelleğe al
 self.addEventListener("install", (event) => {
