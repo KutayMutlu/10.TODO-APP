@@ -1,0 +1,441 @@
+/* =========================================
+   1. DEĞİŞKENLER VE GLOBAL AYARLAR
+   ========================================= */
+:root {
+    --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    --card-bg: #ffffff;
+    --header-text: #2c3e50;
+    --todo-text: #333333;
+    --border-color: #f0f0f0;
+    --input-border: #e0e0e0;
+    --shadow: rgba(0, 0, 0, 0.1);
+    --completed-title: #6e45e2;
+    --icon-default: #7f8c8d;
+    --primary-color: #6c63ff;
+    --error-color: #e74c3c;
+    --success-color: #2ecc71;
+}
+
+.dark {
+    --bg-gradient: linear-gradient(135deg, #1a1c2c 0%, #2c3e50 100%);
+    --card-bg: #2d3436;
+    --header-text: #f5f7fa;
+    --todo-text: #dfe6e9;
+    --border-color: #3d4446;
+    --input-border: #4a4a4a;
+    --shadow: rgba(0, 0, 0, 0.4);
+    --completed-title: #a29bfe;
+    --icon-default: #b2bec3;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    transition: background 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+}
+
+body {
+    background: var(--bg-gradient);
+    min-height: 100vh;
+}
+
+/* =========================================
+   2. SİSTEM KONTROLLERİ (AYARLAR VE TEMA)
+   ========================================= */
+.system-controls {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 12px;
+    z-index: 1000;
+}
+
+.settings-btn,
+.theme-toggle-btn {
+    background: var(--card-bg);
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    box-shadow: 0 4px 10px var(--shadow);
+    transition: all 0.3s ease;
+}
+
+.dark .theme-toggle-btn {
+    color: #f1c40f;
+    border-color: #f1c40f;
+}
+
+.settings-btn:hover,
+.theme-toggle-btn:hover {
+    transform: scale(1.1);
+}
+
+.settings-container {
+    position: relative;
+}
+
+.settings-menu {
+    position: absolute;
+    top: 55px;
+    right: 0;
+    background: var(--card-bg);
+    border: 1px solid var(--primary-color);
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px var(--shadow);
+    min-width: 200px;
+}
+
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--header-text);
+    font-weight: 600;
+}
+
+/* Switch (Açma/Kapama) */
+.switch {
+    width: 42px;
+    height: 22px;
+    background: #bdc3c7;
+    border-radius: 20px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.switch.on {
+    background: var(--success-color);
+}
+
+.switch-handle {
+    width: 18px;
+    height: 18px;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.switch.on .switch-handle {
+    transform: translateX(20px);
+}
+
+/* =========================================
+   3. ANA YAPI (LAYOUT)
+   ========================================= */
+.App {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px 10px;
+}
+
+.todo-header {
+    color: var(--header-text);
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 25px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    border-bottom: 3px solid var(--primary-color);
+    padding-bottom: 5px;
+}
+
+.main {
+    width: 100%;
+    max-width: 550px;
+    background-color: var(--card-bg);
+    padding: 25px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px var(--shadow);
+    position: relative;
+    transition: all 0.4s ease;
+}
+
+/* =========================================
+   4. GİRİŞ VE İLERLEME (UI COMPONENTS)
+   ========================================= */
+.todo-input {
+    width: 100%;
+    padding: 12px 5px;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--todo-text);
+    border-bottom: 2px solid var(--input-border);
+    font-size: 16px;
+    margin-bottom: 15px;
+}
+
+.todo-create-button {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 8px;
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.progress-container {
+    margin: 20px 0;
+}
+
+.progress-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-weight: 700;
+    color: var(--header-text);
+}
+
+.progress-bar-background {
+    width: 100%;
+    height: 10px;
+    background-color: var(--border-color);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #6c63ff 0%, #a29bfe 100%);
+    transition: width 0.5s ease;
+}
+
+/* =========================================
+   5. FİLTRELER VE TOPLU İŞLEMLER
+   ========================================= */
+.filter-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin: 25px 0;
+}
+
+.filter-container {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    flex: 1;
+    min-width: 90px;
+    padding: 10px 8px;
+    font-size: 13px;
+    font-weight: 700;
+    border: 2px solid var(--border-color);
+    border-radius: 20px;
+    background: transparent;
+    color: var(--icon-default);
+    cursor: pointer;
+}
+
+.filter-btn.active {
+    background-color: var(--primary-color);
+    color: white !important;
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(108, 99, 255, 0.3);
+}
+
+.bulk-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.bulk-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.clear-completed {
+    background: rgba(46, 204, 113, 0.1);
+    color: #2ecc71;
+}
+
+.clear-all {
+    background: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+}
+
+/* =========================================
+   6. LİSTE ÖĞELERİ (TODO ITEM)
+   ========================================= */
+.todo-row-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.todo-lists {
+    display: flex;
+    justify-content: space-between;
+    border: 1px solid var(--border-color);
+    padding: 12px 18px;
+    border-radius: 12px;
+    background-color: var(--card-bg);
+    flex: 1;
+    box-shadow: 0 2px 5px var(--shadow);
+}
+
+.truncated-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 250px;
+    display: block;
+}
+
+.todo-icons-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.todo-icons {
+    font-size: 26px;
+    cursor: pointer;
+    color: var(--icon-default);
+}
+
+.icon-remove {
+    color: var(--error-color) !important;
+}
+
+/* =========================================
+   7. ARŞİV EFEKTLERİ VE ANİMASYONLAR
+   ========================================= */
+.App:has(.filter-btn.active[data-filter="archive"]) .main {
+    border-top: 5px solid #7d5fff;
+    box-shadow: 0 15px 35px rgba(125, 95, 255, 0.2);
+}
+
+.empty-text {
+    background: rgba(125, 95, 255, 0.05);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px dashed var(--primary-color);
+    color: var(--icon-default);
+    text-align: center;
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.shake {
+    animation: shake-animation 0.25s both;
+}
+
+@keyframes shake-animation {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-4px);
+    }
+
+    75% {
+        transform: translateX(4px);
+    }
+}
+
+.footer {
+    margin-top: 40px;
+    padding: 20px;
+    text-align: center;
+}
+
+.footer-name {
+    color: var(--primary-color);
+    font-weight: 800;
+}
+
+/* Mobil Uyumluluk */
+@media (max-width: 480px) {
+    .filter-btn {
+        min-width: 75px;
+        font-size: 11px;
+    }
+
+    .truncated-text {
+        max-width: 150px;
+    }
+
+    .system-controls {
+        top: 10px;
+        right: 10px;
+    }
+}
+
+/* 3. KONTROL: Dil Seçici Stili */
+.lang-select {
+    background: var(--card-bg);
+    color: var(--todo-text);
+    border: 1px solid var(--primary-color);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.lang-select:hover {
+    border-color: var(--completed-title);
+}
+
+/* Ayarlar item'ları arası boşluk */
+.setting-item {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    /* Elemanlar arası nefes payı */
+    border-bottom: 1px solid var(--border-color);
+}
+
+.setting-item:last-child {
+    border-bottom: none;
+}
