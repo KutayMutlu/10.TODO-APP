@@ -249,6 +249,10 @@ body {
     cursor: pointer;
 }
 
+.filter-icon {
+    display: inline-flex;
+}
+
 .filter-btn.active {
     background-color: var(--primary-color);
     color: white !important;
@@ -520,4 +524,33 @@ body {
 .footer {
     opacity: 0.9;
     transition: color 0.3s ease;
+}
+
+/* =========================================
+   ARŞİV & BOŞ DURUM KESİN ÇÖZÜM (NUCLEAR FIX)
+   ========================================= */
+
+/* Dark modda kartın içindeki TÜM paragrafları ve yazıları hedef al */
+.dark .main p,
+.dark .main span,
+.dark .empty-text,
+.dark .empty-state-text,
+.dark .archive-empty-text {
+    color: var(--todo-text) !important;
+    opacity: 1 !important;
+}
+
+/* Eğer bu yazı 'empty-state-container' gibi bir div içindeyse */
+.dark [class*="empty-state"] p,
+.dark [class*="empty-state"] span {
+    color: var(--todo-text) !important;
+}
+
+/* Arşiv ikonunun sapıtması ve rengi için */
+.dark .empty-state-container svg,
+.dark .empty-state-container i,
+.dark .archive-icon {
+    color: var(--todo-text) !important;
+    fill: var(--todo-text) !important;
+    opacity: 1 !important;
 }
