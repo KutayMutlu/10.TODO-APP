@@ -1,4 +1,4 @@
-const CACHE_NAME = "kutay-todo-v2"; // Versiyonu v2 yaptık
+const CACHE_NAME = "kutay-todo-v3";
 
 // Yükleme anında temel dosyaları önbelleğe al
 self.addEventListener("install", (event) => {
@@ -8,11 +8,14 @@ self.addEventListener("install", (event) => {
                 "/",
                 "/index.html",
                 "/manifest.json",
-                "/logo.png"
+                "/logo.png",
+                "/sounds/add.mp3",
+                "/sounds/delete.mp3",
+                "/sounds/warn.mp3"
             ]);
         })
     );
-    self.skipWaiting(); // Yeni versiyonun hemen aktif olmasını sağlar
+    self.skipWaiting();
 });
 
 // Aktivasyon anında eski cache'leri temizle
@@ -33,16 +36,22 @@ self.addEventListener("activate", (event) => {
 
 // İNTERNET YOKSA ÖNBELLEKTEN GETİR (NETWORK-FIRST STRATEJİSİ)
 self.addEventListener("fetch", (event) => {
+    // Sadece kendi sitemizden gelen istekleri (sesler dahil) yakala
     event.respondWith(
-        fetch(event.request)
-            .then((response) => {
-                // İnternet varsa, gelen dosyayı cache'e de kopyala (Dinamik Önbellek)
-                const resClone = response.clone();
-                caches.open(CACHE_NAME).then((cache) => {
-                    cache.put(event.request, resClone);
-                });
+        caches.match(event.request).then((cachedResponse) => {
+            if (cachedResponse) {
+                return cachedResponse; // Varsa hafızadan getir
+            }
+            return fetch(event.request).then((response) => {
+                // Ses dosyası veya resimse, gelecekte kullanmak üzere hafızaya at
+                if (event.request.url.includes('/sounds/')) {
+                    const resClone = response.clone();
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(event.request, resClone);
+                    });
+                }
                 return response;
-            })
-            .catch(() => caches.match(event.request).then((res) => res)) // İnternet yoksa cache'den dön
+            });
+        })
     );
 });
