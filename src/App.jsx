@@ -17,7 +17,7 @@ import { arrayMove } from '@dnd-kit/sortable';
 
 const translations = {
   tr: {
-    header: "Todo List",
+    header: "To-Do List",
     completedTitle: "Tamamlanan Hedefler",
     emptyWarn: "Lütfen bir hedef giriniz! ⚠️",
     deleteConfirm: "Bu hedefi silmek istediğinize emin misiniz? 🗑️",
@@ -44,7 +44,7 @@ const translations = {
     soundEffects: "Ses Efektleri"
   },
   en: {
-    header: "Todo List",
+    header: "To-Do List",
     completedTitle: "Completed Tasks",
     emptyWarn: "Please enter a task! ⚠️",
     deleteConfirm: "Are you sure you want to delete this task? 🗑️",
