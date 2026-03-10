@@ -439,3 +439,85 @@ body {
 .setting-item:last-child {
     border-bottom: none;
 }
+
+/* =========================================
+   GÖRÜNMEYEN BOŞ DURUM (EMPTY STATE) FİXİ
+   ========================================= */
+
+/* Dark modda hem ikonu hem yazıyı parlatır */
+.dark .empty-state-container .empty-state-icon,
+.dark .empty-state-container .empty-state-text {
+    color: var(--todo-text) !important;
+    opacity: 0.9 !important;
+    /* Opaklığı artırıyoruz */
+}
+
+/* Arşiv sayfasındaki yazı için özel fix */
+.dark .empty-state-container p {
+    color: var(--todo-text) !important;
+}
+
+/* KONTROL: Eğer hala siyahsa, direkt kaba kuvvetle beyaza çekelim */
+.dark .empty-state-text {
+    color: #dfe6e9 !important;
+}
+
+/* =========================================
+   GÖRÜNMEYEN METİNLER İÇİN ÖZEL MÜDAHALE (FORCE WHITE)
+   ========================================= */
+
+/* Dark moddayken tüm paragrafları ve div içindeki metinleri açık renge zorla */
+.dark .empty-state-container p,
+.dark .empty-text,
+.dark .empty-state-text,
+.dark .archive-note {
+    color: #dfe6e9 !important;
+    /* Açık Gri/Beyaz */
+    opacity: 1 !important;
+    /* Şeffaflığı iptal et */
+}
+
+/* Ekran görüntüsündeki o siyah ikonu (Clipboard) beyaza çevir */
+.dark .empty-state-container i {
+    color: #dfe6e9 !important;
+    fill: #dfe6e9 !important;
+    /* Eğer SVG ise */
+    opacity: 1 !important;
+}
+
+/* "Arşivlenmiş hedefler burada saklanır" yazısı için özel seçici */
+.dark .main p {
+    color: var(--todo-text) !important;
+}
+
+.dark .todo-input::placeholder {
+    color: #b2bec3 !important;
+    /* Açık gri/beyazımsı */
+    opacity: 0.8 !important;
+    /* Görünürlüğü artır */
+}
+
+/* Bazı tarayıcılar (Safari/Firefox) için placeholder desteği */
+.dark .todo-input::-webkit-input-placeholder {
+    color: #b2bec3 !important;
+}
+
+.dark .todo-input::-moz-placeholder {
+    color: #b2bec3 !important;
+}
+
+/* 2. KONTROL: Input içindeki imleci (cursor) beyaz yap */
+.dark .todo-input {
+    caret-color: white !important;
+}
+
+/* Footer Yazısını Dark Modda Beyaza Çek */
+.dark .footer {
+    color: var(--todo-text) !important;
+}
+
+/* Eğer opacity (şeffaflık) varsa onu da netleştir */
+.footer {
+    opacity: 0.9;
+    transition: color 0.3s ease;
+}

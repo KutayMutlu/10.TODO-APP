@@ -89,6 +89,9 @@ function App() {
   const [filter, setFilter] = useState("all");
   const [showSettings, setShowSettings] = useState(false);
 
+  const [darkMode, setDarkMode] = useState(false);
+
+
   // 1. KONTROL: Ses ayarının yüklenmesi
   const [isSoundEnabled, setIsSoundEnabled] = useState(() => {
     const savedSound = localStorage.getItem("soundEnabled");
