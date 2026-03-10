@@ -164,6 +164,7 @@ function App() {
     const completedExist = todos.some(todo => todo.isCompleted && !todo.isArchived);
     if (!completedExist) {
       toast.warn(lang === 'tr' ? "Arşivlenecek hedef bulunamadı." : "Nothing to archive.");
+      playSound('warn');
       return;
     }
 
