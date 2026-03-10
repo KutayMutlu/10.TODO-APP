@@ -22,11 +22,14 @@ function Todo({ todo, onRemoveTodo, onUpdateTodo, onToggleComplete, t }) {
 
     const style = {
         transform: CSS.Translate.toString(transform),
-        transition: isDragging ? 'none' : transition,
-        opacity: isDragging ? 0.4 : (isArchived ? 0.7 : 1), // Arşivdekiler biraz daha saydam
+        // Eğer sürükleme bittiyse dnd-kit'in kendi geçişini (transition) kullan, 
+        // ama o da yoksa tamamen 'none' yap ki zıplama olmasın.
+        transition: isDragging ? 'none' : (transition || 'transform 200ms ease'),
         zIndex: isDragging ? 999 : 1,
+        opacity: isDragging ? 0.6 : (isArchived ? 0.7 : 1),
         touchAction: 'none',
-        pointerEvents: isDragging ? 'none' : 'auto'
+        // Sürükleme bittiğinde tarayıcının 'all' geçişi yapmasını engellemek için:
+        willChange: 'transform'
     };
 
     const formatDate = (timestamp) => {

@@ -23,7 +23,11 @@ function TodoList({ todos, onRemoveTodo, onUpdateTodo, onToggleComplete, t }) {
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
-                layout // 2. KONTROL: Elemanlar silindiğinde diğerlerinin yumuşakça kaymasını sağlar
+                layout
+                // KRİTİK EKLEME: Sürükle-bırak sonrası 'vıjj' efektini kapatır
+                transition={{
+                  layout: { duration: 0 }
+                }}
               >
                 <Todo
                   todo={todoItem}

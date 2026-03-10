@@ -77,13 +77,20 @@ function App() {
 
   const handleDragEnd = (event) => {
     const { active, over } = event;
-    if (over && active.id !== over.id) {
-      setTodos((items) => {
-        const oldIndex = items.findIndex((i) => i.id === active.id);
-        const newIndex = items.findIndex((i) => i.id === over.id);
-        return arrayMove(items, oldIndex, newIndex);
-      });
-    }
+    if (!over || active.id === over.id) return;
+
+    setTodos((items) => {
+      const oldIndex = items.findIndex((item) => item.id === active.id);
+      const newIndex = items.findIndex((item) => item.id === over.id);
+      const updatedList = arrayMove(items, oldIndex, newIndex);
+
+      // LocalStorage işlemini asenkron yaparsan UI kitlenmez
+      setTimeout(() => {
+        localStorage.setItem("todos", JSON.stringify(updatedList));
+      }, 0);
+
+      return updatedList;
+    });
   };
 
   const handleAddTodo = (newTodo) => {

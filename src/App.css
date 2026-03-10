@@ -297,6 +297,9 @@ body {
     align-items: center;
     gap: 12px;
     margin-top: 15px;
+    position: relative;
+    /* Sürükleme sırasında diğerlerinin üstüne çıkması için */
+    z-index: 1;
 }
 
 .todo-lists {
