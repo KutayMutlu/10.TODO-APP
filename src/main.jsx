@@ -12,13 +12,8 @@ createRoot(document.getElementById('root')).render(
 // SERVICE WORKER KAYIT KODU (Buraya ekle)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    // sw.js dosyasının public klasöründe olduğunu varsayar
     navigator.serviceWorker.register('/sw.js')
-      .then(registration => {
-        console.log('SW kayıt başarılı: ', registration.scope);
-      })
-      .catch(error => {
-        console.log('SW kayıt başarısız: ', error);
-      });
+      .then(reg => console.log('SW Kayıt Başarılı:', reg.scope))
+      .catch(err => console.error('SW Kayıt Hatası:', err));
   });
 }

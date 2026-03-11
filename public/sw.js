@@ -1,4 +1,4 @@
-const CACHE_NAME = "kutay-todo-v11";
+const CACHE_NAME = "kutay-todo-v12";
 
 self.addEventListener("install", (event) => {
     self.skipWaiting();
@@ -7,34 +7,29 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
     event.waitUntil(
         caches.keys().then((keys) => {
-            return Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)));
+            return Promise.all(keys.map(key => caches.delete(key)));
         })
     );
     self.clients.claim();
 });
 
 self.addEventListener("fetch", (event) => {
-    // Sadece GET isteklerini ve kendi sitemizi işle
-    if (event.request.method !== 'GET' || !event.request.url.startsWith(self.location.origin)) return;
+    if (event.request.method !== 'GET') return;
 
     event.respondWith(
         fetch(event.request)
-            .then((networkResponse) => {
-                // Eğer cevap null veya hatalıysa cache'e bak
-                if (!networkResponse || networkResponse.status !== 200) {
-                    return caches.match(event.request);
+            .then((response) => {
+                if (!response || response.status !== 200) {
+                    return caches.match(event.request).then(cached => cached || response);
                 }
-
-                // Cevap sağlamsa cache'e at ve dön
-                const responseClone = networkResponse.clone();
-                caches.open(CACHE_NAME).then((cache) => {
-                    cache.put(event.request, responseClone);
-                });
-                return networkResponse;
+                const copy = response.clone();
+                caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+                return response;
             })
-            .catch(() => {
-                // İnternet tamamen kopuksa veya fetch çökerse cache'den getir
-                return caches.match(event.request);
+            .catch(async () => {
+                const cached = await caches.match(event.request);
+                // Eğer her şey biterse ve cache'de yoksa, Safari'yi kırmamak için boş bir cevap dön
+                return cached || new Response("", { status: 404, statusText: "Not Found" });
             })
     );
 });
