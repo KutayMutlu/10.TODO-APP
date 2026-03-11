@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import './App.css'
 import TodoCreate from './components/TodoCreate'
 import TodoList from './components/TodoList'
@@ -24,7 +24,7 @@ import {
 } from "firebase/firestore";
 
 // DND KIT
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, TouchSensor } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 
 // --- TARİH FORMATLAYICI ---
@@ -52,6 +52,28 @@ function App() {
   const [authLoading, setAuthLoading] = useState(true);
 
   const t = translations[lang];
+
+  // --- 1. KONTROL: SETTINGS REF TANIMLAMA ---
+  const settingsRef = useRef(null);
+
+  // --- 2. KONTROL: DIŞARI TIKLAMA MANTIĞI (OUTSIDE CLICK) ---
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Eğer ayarlar açıksa ve tıklanan yer settings-container'ın dışındaysa kapat
+      if (showSettings && settingsRef.current && !settingsRef.current.contains(event.target)) {
+        setShowSettings(false);
+      }
+    };
+
+    // Hem mousedown hem touchstart ekliyoruz (iPhone uyumluluğu için)
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [showSettings]);
 
   // --- KRİTİK: TEKİL AUTH YÖNETİMİ ---
   useEffect(() => {
@@ -265,11 +287,29 @@ function App() {
     toast.info(lang === 'tr' ? "Tamamlananlar arşivlendi." : "Completed archived.");
   };
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), useSensor(KeyboardSensor));
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Mouse ile 8px hareket etmeden sürükleme başlamaz
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250,    // iPhone için kritik: 250ms basılı tutunca sürükleme başlar
+        tolerance: 5,  // Parmağın 5px oynamasına izin verir (titreme payı)
+      },
+    }),
+    useSensor(KeyboardSensor)
+  );
+
   const handleDragEnd = (event) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
-      setTodos((items) => arrayMove(items, items.findIndex(i => i.id === active.id), items.findIndex(i => i.id === over.id)));
+      setTodos((items) => {
+        const oldIndex = items.findIndex((i) => i.id === active.id);
+        const newIndex = items.findIndex((i) => i.id === over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
     }
   };
 
@@ -301,7 +341,8 @@ function App() {
           </div>
         )}
 
-        <div className="settings-container">
+        {/* 3. KONTROL: SETTINGS CONTAINER REF ATAMASI */}
+        <div className="settings-container" ref={settingsRef}>
           <button className="settings-btn" onClick={() => setShowSettings(!showSettings)}>
             <IoMdSettings />
           </button>
@@ -382,10 +423,10 @@ function App() {
               onClearCompleted={clearCompletedTodos}
             />
 
-
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <TodoList
                 todos={sortedTodos}
+                setTodos={setTodos}
                 onRemoveTodo={removeTodo}
                 onUpdateTodo={updateTodo}
                 onToggleComplete={toggleCompleteTodo}

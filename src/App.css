@@ -215,6 +215,7 @@ body {
     padding: 25px;
     border-radius: 16px;
     box-shadow: 0 10px 30px var(--shadow);
+
 }
 
 .todo-input {
@@ -467,9 +468,29 @@ body {
 
 /* Toast ve Profil */
 .wide-toast {
-    width: 450px !important;
+    /* Sabit 450px yerine ekranın %90'ını kapla ama 450px'i geçme */
+    width: 90% !important;
+    max-width: 450px !important;
+
     text-align: center;
     border-radius: 12px !important;
+
+
+    /* Mobilde ekranın tam ortasında ve güvenli alanda durması için */
+    margin: 0 auto !important;
+    font-size: 14px !important;
+    /* Mobilde yazıyı bir tık küçültmek taşmayı önler */
+}
+
+/* iPhone 14 Pro ve benzeri cihazlar için ekstra hassas ayar */
+@media (max-width: 480px) {
+    .wide-toast {
+        width: 85% !important;
+        padding: 10px 15px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        /* Yatayda tam ortalar */
+    }
 }
 
 .user-avatar-small {
@@ -680,4 +701,20 @@ body {
     font-weight: 500;
     font-size: 13px;
     /* Çok parlak olmasın, arka planda kalsın */
+}
+
+.todo-row-container {
+    touch-action: none;
+    /* Kütüphanenin dokunmatiği tam kontrol etmesini sağlar */
+    cursor: grab;
+}
+
+.todo-row-container:active {
+    cursor: grabbing;
+}
+
+/* iPhone'da metin seçilmesini engelleyerek kaydırmayı kolaylaştırır */
+.todo-list-container {
+    user-select: none;
+    -webkit-user-select: none;
 }
