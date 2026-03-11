@@ -75,40 +75,48 @@ function App() {
     };
   }, [showSettings]);
 
-  // --- KRİTİK: TEKİL VE OPTİMİZE AUTH YÖNETİMİ (V5 - FINAL) ---
+  // --- KRİTİK: ASLA TAKILMAZ VE OPTİMİZE AUTH (V6 - HYBRID) ---
   useEffect(() => {
     let isMounted = true;
 
-    // 1. KONTROL: Yönlendirme (Google Login) sonucunu arka planda yakala.
-    // Bu işlem asenkrondur ve uygulamanın açılış hızını asla etkilemez.
+    // 1. KONTROL: iPhone 15 / Safari "Fail-Safe" Mekanizması
+    // Eğer Firebase 2.5 saniye içinde hiçbir yanıt (var veya yok) vermezse, 
+    // kullanıcıyı beyaz ekranda tutma, loading'i zorla kapat.
+    const authGuard = setTimeout(() => {
+      if (isMounted && authLoading) {
+        console.warn("Auth gecikmesi algılandı, uygulama girişe zorlanıyor...");
+        setAuthLoading(false);
+      }
+    }, 2500);
+
+    // 2. KONTROL: Redirect (Google Login) sonucunu arka planda yakala.
     getRedirectResult(auth)
       .then((result) => {
         if (isMounted && result?.user) {
           setUser(result.user);
-          // Sadece yeni bir giriş varsa başarı mesajı göster
           toast.success(lang === 'tr' ? "Giriş başarılı!" : "Login successful!");
         }
       })
       .catch((error) => {
-        // Önemli: Tarayıcı kaynaklı iptallerde uygulama çökmemeli.
         if (isMounted) console.error("Redirect Hatası:", error);
       });
 
-    // 2. KONTROL: Mevcut oturumu (session) en hızlı şekilde yakala.
-    // Firebase indexedDB'den veriyi okur okumaz burası tetiklenir.
+    // 3. KONTROL: Mevcut oturumu (Session) yakala.
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (isMounted) {
+        clearTimeout(authGuard); // Firebase yanıt verirse zamanlayıcıyı iptal et.
         setUser(currentUser);
-        setAuthLoading(false); // Oturum durumu (var/yok) kesinleştiğinde loading'i kaldır.
+        setAuthLoading(false); // Oturum kesinleştiği an loading biter.
       }
     });
 
-    // 3. KONTROL: Cleanup fonksiyonu.
+    // 4. KONTROL: Cleanup (Bellek sızıntısı koruması)
     return () => {
       isMounted = false;
       unsubscribe();
+      clearTimeout(authGuard); // Component kapanırsa zamanlayıcıyı temizle.
     };
-  }, [lang]); // Dil değiştiğinde mesajların doğru dilde çıkması için 'lang' bağımlılığı kalmalı.
+  }, [lang]); // Dil değişiminde mesajların doğruluğu için 'lang' bağımlılığı şart. // Dil değiştiğinde mesajların doğru dilde çıkması için 'lang' bağımlılığı kalmalı.
 
   // --- VERİ TABANI (FIRESTORE) BAĞLANTISI ---
   useEffect(() => {
