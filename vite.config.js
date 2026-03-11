@@ -1,13 +1,13 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { VitePWA } from 'vite-plugin-pwa' // Eklentiyi dahil et
+import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['logo.png', 'favicon.ico', 'robots.txt'], // Offline olması gereken dosyalar
+      includeAssets: ['logo.png', 'favicon.ico', 'robots.txt'],
       manifest: {
         name: 'Todo App',
         short_name: 'Todo',
@@ -27,7 +27,7 @@ export default defineConfig({
         ]
       },
       workbox: {
-        // İşte burası kritik: İnternet yoksa her şeyi hafızadan getirir
+        // Çevrimdışı destek için tüm varlıkları kapsayan desen
         globPatterns: ['**/*.{js,css,html,png,svg,mp3}']
       }
     })

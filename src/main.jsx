@@ -8,6 +8,3 @@ createRoot(document.getElementById('root')).render(
     <App />
   </StrictMode>
 )
-
-// Buradaki tüm if ('serviceWorker' in navigator) bloklarını sildik.
-// Eklenti build sırasında kendi kayıt kodunu otomatik olarak ekleyecek.

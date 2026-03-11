@@ -1,8 +1,7 @@
 import React, { useState } from 'react'
 import "../App.css";
-import { toast } from 'react-toastify';
 
-function TodoCreate({ onCreateTodo, t }) {
+function TodoCreate({ onCreateTodo, t, playSound }) {
     const [newTodo, setNewTodo] = useState('');
     const [isShaking, setIsShaking] = useState(false);
 
@@ -10,34 +9,43 @@ function TodoCreate({ onCreateTodo, t }) {
         setNewTodo("");
     }
 
-    const createTodo = () => {
-        // Eğer input boşsa sallanma animasyonunu tetikle
+    const createTodo = async () => {
+        // 1. KONTROL: Boş içerik denetimi ve görsel geri bildirim
         if (newTodo.trim() === "") {
             setIsShaking(true);
-            onCreateTodo({ content: "" }); // App.jsx'teki handleAddTodo'yu tetikle, uyarıyı orası versin
+            // App.jsx'teki handleAddTodo'yu tetikle, uyarıyı ve sesi orası yönetsin
+            onCreateTodo({ content: "" });
             setTimeout(() => setIsShaking(false), 250);
             return;
         }
 
-        // App.jsx'teki handleAddTodo fonksiyonuna gönderilecek obje
+        // 2. KONTROL: Veri objesinin temizliği
+        // Not: 'id' ve 'createdAt' artık Firebase (App.jsx) tarafından atanıyor. 
+        // Manuel ID üretmek Firebase'in otomatik ID özelliğiyle çakışabilir.
         const request = {
-            id: Math.floor(Math.random() * 9999999999),
             content: newTodo
-            // Not: createdAt bilgisi artık App.jsx tarafında ekleniyor.
         }
 
-        onCreateTodo(request);
-        clearInput();
+        try {
+            // 3. KONTROL: Ekleme işlemini asenkron bekliyoruz
+            await onCreateTodo(request);
+            // 4. KONTROL: Sadece başarı durumunda inputu temizle
+            clearInput();
+        } catch (error) {
+            // Hata durumunda input silinmez, kullanıcı tekrar deneyebilir
+            console.error("Görev eklenirken hata oluştu:", error);
+        }
     }
 
     const handleKeyDown = (e) => {
+        // 5. KONTROL: Enter tuşuyla hızlı ekleme
         if (e.key === 'Enter') {
             createTodo();
         }
     }
 
     return (
-        /* isShaking true olduğunda 'shake' class'ı eklenir */
+        /* 6. KONTROL: Dinamik sınıf atamasıyla sallanma efekti */
         <div className={`todo-create ${isShaking ? 'shake' : ''}`}>
             <input
                 value={newTodo}
@@ -47,6 +55,7 @@ function TodoCreate({ onCreateTodo, t }) {
                 type="text"
                 placeholder={t.placeholder}
             />
+            {/* 7. KONTROL: Buton metni dil desteğine (t) tam uyumlu */}
             <button onClick={createTodo} className='todo-create-button'>
                 {t.buttonText}
             </button>

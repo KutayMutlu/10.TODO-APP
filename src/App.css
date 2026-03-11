@@ -9,11 +9,10 @@
     --border-color: #f0f0f0;
     --input-border: #e0e0e0;
     --shadow: rgba(0, 0, 0, 0.1);
-    --completed-title: #6e45e2;
-    --icon-default: #7f8c8d;
     --primary-color: #6c63ff;
     --error-color: #e74c3c;
     --success-color: #2ecc71;
+    --icon-default: #7f8c8d;
 }
 
 .dark {
@@ -24,7 +23,6 @@
     --border-color: #3d4446;
     --input-border: #4a4a4a;
     --shadow: rgba(0, 0, 0, 0.4);
-    --completed-title: #a29bfe;
     --icon-default: #b2bec3;
 }
 
@@ -33,7 +31,7 @@
     margin: 0;
     padding: 0;
     font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    transition: background 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+    transition: background 0.3s ease, color 0.3s ease;
 }
 
 body {
@@ -42,13 +40,14 @@ body {
 }
 
 /* =========================================
-   2. SİSTEM KONTROLLERİ (AYARLAR VE TEMA)
+   2. SİSTEM KONTROLLERİ VE AYARLAR MENÜSÜ
    ========================================= */
 .system-controls {
     position: fixed;
     top: 20px;
     right: 20px;
     display: flex;
+    align-items: center;
     gap: 12px;
     z-index: 1000;
 }
@@ -67,21 +66,11 @@ body {
     justify-content: center;
     font-size: 22px;
     box-shadow: 0 4px 10px var(--shadow);
-    transition: all 0.3s ease;
 }
 
 .dark .theme-toggle-btn {
     color: #f1c40f;
     border-color: #f1c40f;
-}
-
-.settings-btn:hover,
-.theme-toggle-btn:hover {
-    transform: scale(1.1);
-}
-
-.settings-container {
-    position: relative;
 }
 
 .settings-menu {
@@ -93,18 +82,39 @@ body {
     padding: 15px;
     border-radius: 12px;
     box-shadow: 0 10px 25px var(--shadow);
-    min-width: 200px;
+    min-width: 220px;
 }
 
 .setting-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 10px 0;
     color: var(--header-text);
     font-weight: 600;
+    border-bottom: 1px solid var(--border-color);
 }
 
-/* Switch (Açma/Kapama) */
+.setting-item:last-child {
+    border-bottom: none;
+}
+
+.setting-item.action {
+    cursor: pointer;
+    border-radius: 8px;
+    transition: 0.2s;
+    padding: 10px;
+}
+
+.setting-item.action:hover {
+    background: rgba(108, 99, 255, 0.1);
+}
+
+.setting-item.logout {
+    color: var(--error-color);
+}
+
+/* Switch Stili */
 .switch {
     width: 42px;
     height: 22px;
@@ -112,7 +122,6 @@ body {
     border-radius: 20px;
     position: relative;
     cursor: pointer;
-    transition: background 0.3s;
 }
 
 .switch.on {
@@ -127,7 +136,7 @@ body {
     position: absolute;
     top: 2px;
     left: 2px;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.3s;
 }
 
 .switch.on .switch-handle {
@@ -135,10 +144,54 @@ body {
 }
 
 /* =========================================
-   3. ANA YAPI (LAYOUT)
+   3. GİRİŞ PANELİ (AUTH)
+   ========================================= */
+.login-container {
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.login-card-mini {
+    background: var(--card-bg);
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px var(--shadow);
+    text-align: center;
+    width: 100%;
+    max-width: 400px;
+}
+
+.login-options {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.login-icon-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 1px solid var(--border-color);
+    background: var(--card-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.login-icon-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px var(--shadow);
+}
+
+/* =========================================
+   4. ANA YAPI VE INPUT (HEDEF EKLEME)
    ========================================= */
 .App {
-    width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -149,11 +202,10 @@ body {
     color: var(--header-text);
     font-size: 28px;
     font-weight: 800;
+    margin-top: 60px;
     margin-bottom: 25px;
     text-transform: uppercase;
-    letter-spacing: 2px;
     border-bottom: 3px solid var(--primary-color);
-    padding-bottom: 5px;
 }
 
 .main {
@@ -163,23 +215,44 @@ body {
     padding: 25px;
     border-radius: 16px;
     box-shadow: 0 10px 30px var(--shadow);
-    position: relative;
-    transition: all 0.4s ease;
 }
 
-/* =========================================
-   4. GİRİŞ VE İLERLEME (UI COMPONENTS)
-   ========================================= */
 .todo-input {
     width: 100%;
     padding: 12px 5px;
     border: none;
-    outline: none;
     background: transparent;
     color: var(--todo-text);
     border-bottom: 2px solid var(--input-border);
     font-size: 16px;
     margin-bottom: 15px;
+    outline: none;
+}
+
+/* Dark modda input placeholder (hedef giriniz) fixi */
+.dark .todo-input::placeholder {
+    color: #b2bec3 !important;
+    /* Açık gri/beyazımsı ton */
+    opacity: 0.8 !important;
+    /* Görünürlüğü artırır */
+}
+
+/* Farklı tarayıcılar (Safari, Firefox, Chrome) için garantiye alalım */
+.dark .todo-input::-webkit-input-placeholder {
+    color: #b2bec3 !important;
+}
+
+.dark .todo-input::-moz-placeholder {
+    color: #b2bec3 !important;
+}
+
+.dark .todo-input:-ms-input-placeholder {
+    color: #b2bec3 !important;
+}
+
+.dark .todo-input:focus {
+    border-bottom-color: var(--primary-color);
+    color: #ffffff;
 }
 
 .todo-create-button {
@@ -191,8 +264,17 @@ body {
     color: white;
     font-weight: 700;
     cursor: pointer;
+    transition: 0.3s;
 }
 
+.todo-create-button:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+/* =========================================
+   5. İLERLEME VE FİLTRELER
+   ========================================= */
 .progress-container {
     margin: 20px 0;
 }
@@ -219,9 +301,6 @@ body {
     transition: width 0.5s ease;
 }
 
-/* =========================================
-   5. FİLTRELER VE TOPLU İŞLEMLER
-   ========================================= */
 .filter-wrapper {
     display: flex;
     flex-direction: column;
@@ -249,15 +328,10 @@ body {
     cursor: pointer;
 }
 
-.filter-icon {
-    display: inline-flex;
-}
-
 .filter-btn.active {
     background-color: var(--primary-color);
-    color: white !important;
+    color: white;
     border-color: var(--primary-color);
-    box-shadow: 0 4px 12px rgba(108, 99, 255, 0.3);
 }
 
 .bulk-actions {
@@ -281,25 +355,22 @@ body {
 
 .clear-completed {
     background: rgba(46, 204, 113, 0.1);
-    color: #2ecc71;
+    color: var(--success-color);
 }
 
 .clear-all {
     background: rgba(231, 76, 60, 0.1);
-    color: #e74c3c;
+    color: var(--error-color);
 }
 
 /* =========================================
-   6. LİSTE ÖĞELERİ (TODO ITEM)
+   6. TODO LİSTESİ VE ÖĞELER
    ========================================= */
 .todo-row-container {
     display: flex;
     align-items: center;
     gap: 12px;
     margin-top: 15px;
-    position: relative;
-    /* Sürükleme sırasında diğerlerinin üstüne çıkması için */
-    z-index: 1;
 }
 
 .todo-lists {
@@ -318,6 +389,14 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 250px;
+    color: var(--todo-text);
+}
+
+.full-text {
+    white-space: normal !important;
+    word-break: break-word;
+    max-height: 200px;
+    overflow-y: auto;
     display: block;
 }
 
@@ -338,21 +417,22 @@ body {
 }
 
 /* =========================================
-   7. ARŞİV EFEKTLERİ VE ANİMASYONLAR
+   7. ANİMASYONLAR VE ÖZEL DURUMLAR
    ========================================= */
-.App:has(.filter-btn.active[data-filter="archive"]) .main {
-    border-top: 5px solid #7d5fff;
-    box-shadow: 0 15px 35px rgba(125, 95, 255, 0.2);
-}
-
 .empty-text {
-    background: rgba(125, 95, 255, 0.05);
     padding: 20px;
     border-radius: 12px;
     border: 1px dashed var(--primary-color);
     color: var(--icon-default);
     text-align: center;
     animation: fadeIn 0.5s ease;
+}
+
+.dark .empty-text,
+.dark .main p,
+.dark .empty-state-text {
+    color: var(--todo-text) !important;
+    opacity: 1 !important;
 }
 
 @keyframes fadeIn {
@@ -367,41 +447,11 @@ body {
     }
 }
 
-.shake {
-    animation: shake-animation 0.25s both;
-}
-
-@keyframes shake-animation {
-
-    0%,
-    100% {
-        transform: translateX(0);
-    }
-
-    25% {
-        transform: translateX(-4px);
-    }
-
-    75% {
-        transform: translateX(4px);
-    }
-}
-
-.footer {
-    margin-top: 40px;
-    padding: 20px;
-    text-align: center;
-}
-
-.footer-name {
-    color: var(--primary-color);
-    font-weight: 800;
-}
-
 /* Mobil Uyumluluk */
 @media (max-width: 480px) {
     .filter-btn {
-        min-width: 75px;
+        flex: 1 1 calc(50% - 10px);
+        min-width: 110px;
         font-size: 11px;
     }
 
@@ -415,247 +465,219 @@ body {
     }
 }
 
-/* 3. KONTROL: Dil Seçici Stili */
-.lang-select {
-    background: var(--card-bg);
-    color: var(--todo-text);
-    border: 1px solid var(--primary-color);
-    border-radius: 6px;
-    padding: 4px 8px;
-    font-size: 13px;
-    outline: none;
-    cursor: pointer;
-    transition: all 0.2s;
+/* Toast ve Profil */
+.wide-toast {
+    width: 450px !important;
+    text-align: center;
+    border-radius: 12px !important;
 }
 
-.lang-select:hover {
-    border-color: var(--completed-title);
+.user-avatar-small {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    object-fit: cover;
 }
 
-/* Ayarlar item'ları arası boşluk */
-.setting-item {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 0;
-    /* Elemanlar arası nefes payı */
-    border-bottom: 1px solid var(--border-color);
+.user-avatar-small.is-guest {
+    border: 2px dashed #ccc;
+    padding: 1px;
 }
 
-.setting-item:last-child {
-    border-bottom: none;
+.icon-blue {
+    color: #4285f4 !important;
 }
 
 /* =========================================
-   GÖRÜNMEYEN BOŞ DURUM (EMPTY STATE) FİXİ
+   8. FOOTER (İMZA VE ALT BİLGİ)
    ========================================= */
-
-/* Dark modda hem ikonu hem yazıyı parlatır */
-.dark .empty-state-container .empty-state-icon,
-.dark .empty-state-container .empty-state-text {
-    color: var(--todo-text) !important;
-    opacity: 0.9 !important;
-    /* Opaklığı artırıyoruz */
-}
-
-/* Arşiv sayfasındaki yazı için özel fix */
-.dark .empty-state-container p {
-    color: var(--todo-text) !important;
-}
-
-/* KONTROL: Eğer hala siyahsa, direkt kaba kuvvetle beyaza çekelim */
-.dark .empty-state-text {
-    color: #dfe6e9 !important;
-}
-
-/* =========================================
-   GÖRÜNMEYEN METİNLER İÇİN ÖZEL MÜDAHALE (FORCE WHITE)
-   ========================================= */
-
-/* Dark moddayken tüm paragrafları ve div içindeki metinleri açık renge zorla */
-.dark .empty-state-container p,
-.dark .empty-text,
-.dark .empty-state-text,
-.dark .archive-note {
-    color: #dfe6e9 !important;
-    /* Açık Gri/Beyaz */
-    opacity: 1 !important;
-    /* Şeffaflığı iptal et */
-}
-
-/* Ekran görüntüsündeki o siyah ikonu (Clipboard) beyaza çevir */
-.dark .empty-state-container i {
-    color: #dfe6e9 !important;
-    fill: #dfe6e9 !important;
-    /* Eğer SVG ise */
-    opacity: 1 !important;
-}
-
-/* "Arşivlenmiş hedefler burada saklanır" yazısı için özel seçici */
-.dark .main p {
-    color: var(--todo-text) !important;
-}
-
-.dark .todo-input::placeholder {
-    color: #b2bec3 !important;
-    /* Açık gri/beyazımsı */
-    opacity: 0.8 !important;
-    /* Görünürlüğü artır */
-}
-
-/* Bazı tarayıcılar (Safari/Firefox) için placeholder desteği */
-.dark .todo-input::-webkit-input-placeholder {
-    color: #b2bec3 !important;
-}
-
-.dark .todo-input::-moz-placeholder {
-    color: #b2bec3 !important;
-}
-
-/* 2. KONTROL: Input içindeki imleci (cursor) beyaz yap */
-.dark .todo-input {
-    caret-color: white !important;
-}
-
-/* Footer Yazısını Dark Modda Beyaza Çek */
-.dark .footer {
-    color: var(--todo-text) !important;
-}
-
-/* Eğer opacity (şeffaflık) varsa onu da netleştir */
 .footer {
+    margin-top: 40px;
+    padding: 20px;
+    text-align: center;
     opacity: 0.9;
     transition: color 0.3s ease;
 }
 
-/* =========================================
-   ARŞİV & BOŞ DURUM KESİN ÇÖZÜM (NUCLEAR FIX)
-   ========================================= */
-
-/* Dark modda kartın içindeki TÜM paragrafları ve yazıları hedef al */
-.dark .main p,
-.dark .main span,
-.dark .empty-text,
-.dark .empty-state-text,
-.dark .archive-empty-text {
-    color: var(--todo-text) !important;
-    opacity: 1 !important;
+.footer-name {
+    color: var(--primary-color);
+    font-weight: 800;
+    /* Ekstra kalın Kutay Mutlu yazısı */
 }
 
-/* Eğer bu yazı 'empty-state-container' gibi bir div içindeyse */
-.dark [class*="empty-state"] p,
-.dark [class*="empty-state"] span {
+/* Dark Modda Footer Yazısını Belirginleştir */
+.dark .footer {
     color: var(--todo-text) !important;
 }
 
-/* Arşiv ikonunun sapıtması ve rengi için */
-.dark .empty-state-container,
-.dark .empty-state-container i,
-.dark .archive-icon {
-    color: var(--todo-text) !important;
-    fill: var(--todo-text) !important;
-    opacity: 1 !important;
-}
-
-/* Tıklandığında aktif olacak sınıf */
-.full-text {
-    white-space: normal !important;
-    /* Satır sarmayı aktif eder */
-    word-break: break-word;
-    /* Uzun kelimeleri böler */
-    max-height: 200px;
-    /* Çok uzunsa sonsuza gitmesin */
-    overflow-y: auto;
-    /* İçeride kaydırma çubuğu çıkarır */
-    display: block;
-    /* Blok element olarak davranmasını sağlar */
-    padding-right: 5px;
-    /* Kaydırma çubuğu için biraz boşluk */
-}
-
-/* İsteğe bağlı: Kaydırma çubuğunu güzelleştirme */
-.full-text::-webkit-scrollbar {
-    width: 4px;
-}
-
-.full-text::-webkit-scrollbar-thumb {
-    background: var(--primary-color);
-    border-radius: 10px;
-}
-
-/* =========================================
-   MOBİL CİHAZLAR İÇİN ÖZEL TAŞMA VE BOZULMA FİXİ
-   (iPhone XR, S20 Ultra ve benzeri genişlikler için)
-   ========================================= */
-
+/* Mobil cihazlarda footer alanı daralması */
 @media (max-width: 480px) {
-
-    /* 1. Filtre Konteynırı: Butonların yan yana sıkışıp taşmasını engeller */
-    .filter-container {
-        display: flex !important;
-        flex-wrap: wrap !important;
-        /* Sığmazsa 2. satıra atar */
-        gap: 6px !important;
-        justify-content: center !important;
-    }
-
-    /* 2. Filtre Butonları: Genişliği ekranın yarısına sabitler (2x2 dizilim) */
-    .filter-btn {
-        flex: 1 1 calc(50% - 10px) !important;
-        /* Her buton genişliğin yarısını kaplar */
-        min-width: 120px !important;
-        font-size: 11px !important;
-        padding: 8px 4px !important;
-        white-space: nowrap !important;
-        text-overflow: ellipsis;
-        overflow: hidden;
-    }
-
-    /* 3. Metin Alanı: Tıklandığında aşağı doğru uzama (Kutu içi scroll) */
-    .todo-lists {
-        align-items: flex-start !important;
-        /* Metin uzarsa ikonlar yukarıda kalsın */
-        min-width: 0 !important;
-        /* Flex taşma önleyici */
-    }
-
-    .truncated-text {
-        max-width: 160px !important;
-        /* Mobilde metin alanını kısıtla */
-    }
-
-    .full-text {
-        white-space: normal !important;
-        word-break: break-word !important;
-        max-height: 150px !important;
-        /* Çok uzun metinlerde kutu aşırı büyümesin */
-        overflow-y: auto !important;
-        /* Kutu içinde kaydırma yap */
-        display: block !important;
-    }
-
-    /* 4. Toplu İşlem Butonları (Hepsini Sil vb.) */
-    .bulk-actions {
-        gap: 6px !important;
-    }
-
-    .bulk-btn {
-        font-size: 11px !important;
-        padding: 10px 5px !important;
-        flex: 1 !important;
-    }
-
-    /* 5. Kartın kenar boşluklarını daraltarak içerik alanını genişlet */
-    .main {
-        padding: 15px 10px !important;
+    .footer {
+        margin-top: 20px;
+        padding: 10px;
+        font-size: 14px;
     }
 }
 
-/* Çok dar ekranlar için (iPhone SE gibi) font ayarı */
-@media (max-width: 360px) {
-    .filter-btn {
-        font-size: 10px !important;
-        min-width: 100px !important;
+/* Sallanma (Shake) Animasyonu */
+.shake {
+    animation: shake-animation 0.25s both;
+}
+
+@keyframes shake-animation {
+
+    0%,
+    100% {
+        transform: translateX(0);
     }
+
+    25% {
+        transform: translateX(-6px);
+        /* Sallanma mesafesini biraz artırdım daha belirgin olsun diye */
+    }
+
+    75% {
+        transform: translateX(6px);
+    }
+}
+
+/* Arşiv Sayfası ve Boş Durum Efektleri */
+.App:has(.filter-btn.active[data-filter="archive"]) .main {
+    border-top: 5px solid #7d5fff;
+    box-shadow: 0 15px 35px rgba(125, 95, 255, 0.2);
+}
+
+/* Boş Durum Metinleri İçin Ekstra Stil */
+.empty-text {
+    background: rgba(125, 95, 255, 0.05);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px dashed var(--primary-color);
+    color: var(--icon-default);
+    text-align: center;
+    animation: fadeIn 0.5s ease;
+}
+
+/* 1. Kontrollerin ana kapsayıcısı */
+.system-controls {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    /* Dikeyde tam ortalar */
+    gap: 15px;
+    z-index: 1000;
+}
+
+/* 2. Profil resmini taşıyan mini alan */
+.user-profile-mini {
+    display: flex;
+    align-items: center;
+    background: var(--card-bg);
+    padding: 2px;
+    /* Daire etrafında ince boşluk */
+    border-radius: 50px;
+    border: 2px solid var(--primary-color);
+    box-shadow: 0 4px 10px var(--shadow);
+    transition: all 0.3s ease;
+}
+
+/* 3. Hesap resmi boyutu (Küçülen resmi burası düzeltir) */
+.user-avatar-small {
+    width: 45px;
+    /* Ayarlar butonu (45px) ile aynı boyuta çektik */
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+}
+
+/* 4. Misafir ise özel çerçeve */
+.user-avatar-small.is-guest {
+    border: 2px dashed #ccc;
+    background: #f9f9f9;
+}
+
+/* 5. Ayarlar butonu boyutuyla eşitleme */
+.settings-btn,
+.theme-toggle-btn {
+    width: 50px;
+    height: 50px;
+    /* Diğer özellikler zaten sendekiyle aynı */
+}
+
+/* Simgeleri bozmadan sadece input ve metin alanlarını beyaza sabitle */
+.dark .todo-lists input,
+.dark .todo-lists .truncated-text,
+.dark .todo-lists .full-text {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Tıklandığında renk değişimini engelle */
+.dark .todo-lists input:focus {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    background-color: transparent !important;
+    outline: none !important;
+}
+
+/* Simgelerin kendi renklerini (gri/kırmızı) korumasını garanti edelim */
+.dark .todo-icons {
+    color: var(--icon-default) !important;
+    -webkit-text-fill-color: initial !important;
+}
+
+.dark .icon-remove {
+    color: var(--error-color) !important;
+}
+
+/* 1. Genel Tarih Stili (Hem Light hem Dark için ortak temeller) */
+.date-css {
+    font-size: 10px;
+    font-weight: 300;
+    margin-top: 4px;
+    display: block;
+    /* Alt satıra düzgünce düşmesi için */
+    transition: color 0.3s ease;
+}
+
+/* 2. Light Modda Tarih (Varsayılan görünüm) */
+.date-css {
+    color: #7f8c8d;
+    /* Koyu gri, ana metinden daha sönük */
+    opacity: 0.7;
+}
+
+/* 3. Dark Modda Tarih (Kritik Alan) */
+.dark .date-css {
+    color: #b2bec3 !important;
+    /* Soft Mor (Temana uygun) veya #b2bec3 (Gümüş Gri) */
+    -webkit-text-fill-color: #b2bec3 !important;
+    opacity: 0.7 !important;
+    font-weight: 500;
+    font-size: 13px;
+    /* Çok parlak olmasın, arka planda kalsın */
+}
+
+/* 4. Hedef Metinlerini (Todo Content) Korumaya Alalım */
+/* Bu sayede tarih için yazdığımız kurallar yukarıdaki ana metni etkilemez */
+.dark .truncated-text,
+.dark .full-text,
+.dark .todo-lists input {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    opacity: 1 !important;
+}
+
+.date-css {
+    color: #a41ce4 !important;
+    -webkit-text-fill-color: #a41ce4 !important;
+    opacity: 0.7 !important;
+    font-weight: 500;
+    font-size: 13px;
+    /* Çok parlak olmasın, arka planda kalsın */
 }

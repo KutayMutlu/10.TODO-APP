@@ -1,32 +1,30 @@
 import React from 'react'
 import Todo from './Todo'
 import { LuClipboardList } from "react-icons/lu";
-import { HiOutlineArchiveBoxXMark } from "react-icons/hi2"; // Arşiv için alternatif ikon
+import { HiOutlineArchiveBoxXMark } from "react-icons/hi2";
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { motion, AnimatePresence } from 'framer-motion';
 
-function TodoList({ todos, onRemoveTodo, onUpdateTodo, onToggleComplete, t }) {
+// 1. KONTROL: 'lang' parametresi buraya eklendi (Hatanın çözümü burası)
+function TodoList({ todos, onRemoveTodo, onUpdateTodo, onToggleComplete, t, lang, playSound, isSoundEnabled }) {
 
-  // 1. KONTROL: Arşiv modunda olup olmadığımızı listedeki ilk elemana bakarak anlayabiliriz
-  // (Filtreleme App.jsx'te yapıldığı için buraya gelen 'todos' zaten filtrelenmiş haldedir)
-  const isArchiveView = todos.length > 0 && todos[0].isArchived;
+  // 2. KONTROL: Liste boşken hata vermemesi için güvenli kontrol
+  const isArchiveView = todos && todos.length > 0 && todos[0].isArchived;
 
   return (
     <div className="todo-list-container" style={{ width: "100%", marginTop: "20px" }}>
       {todos && todos.length > 0 ? (
         <SortableContext items={todos.map(item => item.id)} strategy={verticalListSortingStrategy}>
-          {/* popLayout modu, elemanlar silinirken listenin zıplamasını engeller */}
           <AnimatePresence mode='popLayout'>
             {todos.map((todoItem) => (
               <motion.div
                 key={todoItem.id}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+                exit={{ opacity: 0, scale: 0.95, x: 10, transition: { duration: 0.2 } }}
                 layout
-                // KRİTİK EKLEME: Sürükle-bırak sonrası 'vıjj' efektini kapatır
                 transition={{
-                  layout: { duration: 0 }
+                  layout: { duration: 0.15, type: 'spring', stiffness: 300, damping: 30 }
                 }}
               >
                 <Todo
@@ -34,7 +32,11 @@ function TodoList({ todos, onRemoveTodo, onUpdateTodo, onToggleComplete, t }) {
                   onRemoveTodo={onRemoveTodo}
                   onUpdateTodo={onUpdateTodo}
                   onToggleComplete={onToggleComplete}
+                  playSound={playSound}
+                  isSoundEnabled={isSoundEnabled}
                   t={t}
+                  // 3. KONTROL: Todo bileşenine dil bilgisini aktarıyoruz
+                  lang={lang}
                 />
               </motion.div>
             ))}
@@ -45,10 +47,10 @@ function TodoList({ todos, onRemoveTodo, onUpdateTodo, onToggleComplete, t }) {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
             className="empty-state-container"
             style={{ textAlign: 'center', padding: '40px 0' }}
           >
-            {/* 3. KONTROL: Eğer arşivdeysek ve boşsa farklı ikon gösteriyoruz */}
             {isArchiveView ? (
               <HiOutlineArchiveBoxXMark className="empty-state-icon" style={{ fontSize: '48px', opacity: 0.3 }} />
             ) : (
@@ -56,7 +58,10 @@ function TodoList({ todos, onRemoveTodo, onUpdateTodo, onToggleComplete, t }) {
             )}
 
             <p className="empty-state-text" style={{ marginTop: '10px' }}>
-              {isArchiveView ? (t.archiveEmpty || "Arşiviniz şu an boş.") : t?.noTodos}
+              {/* 4. KONTROL: lang değişkeni artık burada güvenle kullanılabiliyor */}
+              {isArchiveView
+                ? (lang === 'tr' ? "Arşiviniz şu an boş. 📭" : "Archive is empty. 📭")
+                : t?.noTodos}
             </p>
           </motion.div>
         </AnimatePresence>

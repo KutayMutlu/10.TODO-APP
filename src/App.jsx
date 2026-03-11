@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import './App.css'
 import TodoCreate from './components/TodoCreate'
 import TodoList from './components/TodoList'
 import { ToastContainer, toast } from 'react-toastify';
-import { FaSun, FaMoon } from "react-icons/fa";
+import { FaSun, FaMoon, FaSignOutAlt, FaGoogle } from "react-icons/fa";
 import { IoMdSettings } from "react-icons/io";
 import { motion, AnimatePresence } from 'framer-motion';
 import "react-toastify/dist/ReactToastify.css";
@@ -11,18 +11,36 @@ import ProgressBar from './components/ProgressBar';
 import TodoFilter from './components/TodoFilter';
 import Swal from 'sweetalert2';
 import { translations } from './constants';
+import { FcGoogle } from "react-icons/fc";
+
+// --- FIREBASE IMPORTLARI ---
+import { auth, provider, db } from "./firebase";
+import {
+  onAuthStateChanged, signOut, signInWithPopup, getRedirectResult, signInAnonymously, linkWithPopup
+} from "firebase/auth";
+import {
+  collection, addDoc, deleteDoc, doc, updateDoc,
+  onSnapshot, query, orderBy, serverTimestamp, writeBatch, where
+} from "firebase/firestore";
 
 // DND KIT
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 
-function App() {
-  const [lang, setLang] = useState(() => {
-    const savedLang = localStorage.getItem("lang");
-    if (savedLang) return savedLang;
-    return navigator.language.startsWith('tr') ? 'tr' : 'en';
-  });
+// --- TARİH FORMATLAYICI ---
+const formatFirebaseDate = (date) => {
+  if (!date) return "---";
+  try {
+    if (date.seconds) return new Date(date.seconds * 1000).toLocaleString();
+    const d = new Date(date);
+    return isNaN(d.getTime()) ? "---" : d.toLocaleString();
+  } catch (e) { return "---"; }
+};
 
+function App() {
+  // --- STATE TANIMLAMALARI ---
+  const [user, setUser] = useState(null);
+  const [lang, setLang] = useState(() => localStorage.getItem("lang") || (navigator.language.startsWith('tr') ? 'tr' : 'en'));
   const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "light");
   const [filter, setFilter] = useState("all");
   const [showSettings, setShowSettings] = useState(false);
@@ -30,167 +48,229 @@ function App() {
     const savedSound = localStorage.getItem("soundEnabled");
     return savedSound !== null ? JSON.parse(savedSound) : true;
   });
+  const [todos, setTodos] = useState([]);
+  const [authLoading, setAuthLoading] = useState(true);
 
   const t = translations[lang];
 
+  // --- KRİTİK: TEKİL AUTH YÖNETİMİ ---
   useEffect(() => {
-    localStorage.setItem("lang", lang);
+    let isMounted = true;
+    const initAuth = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result?.user && isMounted) {
+          setUser(result.user);
+          toast.success(lang === 'tr' ? "Giriş başarılı!" : "Login successful!");
+        }
+      } catch (error) { console.error("Redirect Hatası:", error); }
+
+      const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+        if (isMounted) {
+          setUser(currentUser);
+          setAuthLoading(false);
+        }
+      });
+      return unsubscribe;
+    };
+    const authCleanUp = initAuth();
+    return () => {
+      isMounted = false;
+      authCleanUp.then(unsub => unsub && unsub());
+    };
   }, [lang]);
 
+  // --- VERİ TABANI (FIRESTORE) BAĞLANTISI ---
   useEffect(() => {
-    if (theme === "dark") document.body.classList.add("dark");
-    else document.body.classList.remove("dark");
+    if (!user) { setTodos([]); return; }
+    const q = query(collection(db, "todos"), where("userId", "==", user.uid), orderBy("createdAt", "desc"));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const todosArray = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        todosArray.push({ ...data, id: doc.id, displayDate: formatFirebaseDate(data.createdAt) });
+      });
+      setTodos(todosArray);
+    }, (error) => { console.error("Firestore Hatası:", error); });
+    return () => unsubscribe();
+  }, [user]);
+
+  // --- LOCAL STORAGE & TEMA ---
+  useEffect(() => { localStorage.setItem("lang", lang); }, [lang]);
+  useEffect(() => {
+    theme === "dark" ? document.body.classList.add("dark") : document.body.classList.remove("dark");
     localStorage.setItem("theme", theme);
   }, [theme]);
+  useEffect(() => { localStorage.setItem("soundEnabled", JSON.stringify(isSoundEnabled)); }, [isSoundEnabled]);
 
-  useEffect(() => {
-    localStorage.setItem("soundEnabled", JSON.stringify(isSoundEnabled));
-  }, [isSoundEnabled]);
-
-  const toggleTheme = () => setTheme(prev => prev === "light" ? "dark" : "light");
-
-  const [todos, setTodos] = useState(() => {
-    const savedTodos = localStorage.getItem("todos");
-    return savedTodos ? JSON.parse(savedTodos) : [];
-  });
-
-  useEffect(() => {
-    localStorage.setItem("todos", JSON.stringify(todos));
-  }, [todos]);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(KeyboardSensor)
-  );
-
-  // TEMİZLENMİŞ SES FONKSİYONU
-  const playSound = (soundName) => {
+  const playSound = useCallback((soundName) => {
     if (!isSoundEnabled) return;
     try {
       const audio = new Audio(`/sounds/${soundName}.mp3`);
       audio.volume = 0.3;
-      audio.play().catch(() => { /* Tarayıcı engeli için sessiz hata yönetimi */ });
-    } catch (e) {
-      // Hata yönetimi sessizce geçiliyor
-    }
+      audio.play().catch(() => { });
+    } catch (e) { }
+  }, [isSoundEnabled]);
+
+  // --- EVENT HANDLERLAR ---
+  const handleLogin = async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      if (result.user) setUser(result.user);
+    } catch (error) { toast.error("Giriş başarısız!"); }
   };
 
-  const handleDragEnd = (event) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-
-    setTodos((items) => {
-      const oldIndex = items.findIndex((item) => item.id === active.id);
-      const newIndex = items.findIndex((item) => item.id === over.id);
-      const updatedList = arrayMove(items, oldIndex, newIndex);
-
-      // LocalStorage işlemini asenkron yaparsan UI kitlenmez
+  const handleGuestLogin = async () => {
+    try {
+      setAuthLoading(true);
+      let currentUser = auth.currentUser;
+      if (!currentUser) {
+        const result = await signInAnonymously(auth);
+        currentUser = result.user;
+        toast.info(lang === 'tr' ? "Misafir oturumu açıldı." : "Guest session started.");
+      } else {
+        toast.info(lang === 'tr' ? "Eski oturumunuz yüklendi." : "Previous session restored.");
+      }
+      setUser(currentUser);
       setTimeout(() => {
-        localStorage.setItem("todos", JSON.stringify(updatedList));
-      }, 0);
+        toast.warning(lang === 'tr' ? "Hedeflerinizin kaybolmaması için lütfen bir hesap bağlayın." : "Please link an account to prevent data loss.", { autoClose: 5000, position: "top-center", className: 'wide-toast' });
+      }, 1000);
+    } finally { setAuthLoading(false); }
+  };
 
-      return updatedList;
+  const handleUpgradeAccount = async () => {
+    try {
+      setAuthLoading(true);
+      const result = await linkWithPopup(auth.currentUser, provider);
+      const upgradedUser = result.user;
+      const googleProfile = upgradedUser.providerData.find(p => p.providerId === "google.com");
+      setUser({
+        ...upgradedUser,
+        photoURL: googleProfile?.photoURL || upgradedUser.photoURL,
+        displayName: googleProfile?.displayName || upgradedUser.displayName,
+        isAnonymous: false
+      });
+      setShowSettings(false);
+      toast.success(lang === 'tr' ? "Hesabınız bağlandı!" : "Account linked!");
+    } catch (error) {
+      if (error.code === 'auth/credential-already-in-use') {
+        Swal.fire({ title: lang === 'tr' ? 'Hesap Zaten Var' : 'Account Already Exists', text: lang === 'tr' ? "Bu Google hesabı zaten başka bir kullanıcıya bağlı." : "This account is already linked.", icon: 'warning' });
+      }
+    } finally { setAuthLoading(false); }
+  };
+
+  const handleLogout = async () => {
+    if (!user) return;
+    setShowSettings(false);
+    if (!user.isAnonymous) {
+      await signOut(auth);
+      setUser(null);
+      toast.info(lang === 'tr' ? "Çıkış yapıldı." : "Logged out.");
+      return;
+    }
+    Swal.fire({
+      title: lang === 'tr' ? 'Oturumu Kapat' : 'Logout',
+      text: lang === 'tr' ? "Verileriniz silinsin mi?" : "Delete data?",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: lang === 'tr' ? 'Hepsini Sil' : 'Delete All',
+      cancelButtonText: lang === 'tr' ? 'Verilerimi Sakla' : 'Keep My Data',
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#6c63ff',
+    }).then(async (swalResult) => {
+      if (swalResult.isConfirmed) {
+        try {
+          const batch = writeBatch(db);
+          todos.forEach((todo) => batch.delete(doc(db, "todos", todo.id)));
+          await batch.commit();
+          await signOut(auth);
+          setUser(null);
+          toast.error(lang === 'tr' ? "Veriler temizlendi." : "Data cleared.");
+        } catch (e) { console.error(e); }
+      } else if (swalResult.dismiss === Swal.DismissReason.cancel) {
+        setUser(null);
+        toast.info(lang === 'tr' ? "Verileriniz saklandı." : "Data saved.");
+      }
     });
   };
 
-  const handleAddTodo = (newTodo) => {
-    if (!newTodo.content || newTodo.content.trim() === "") {
-      playSound('warn');
-      toast.warn(t.emptyWarn);
+  const handleAddTodo = async (newTodo) => {
+    if (!user || !newTodo.content?.trim()) {
+      if (!newTodo.content?.trim()) { playSound('warn'); toast.warn(t.emptyWarn); }
       return;
     }
+    try {
+      playSound('add');
+      await addDoc(collection(db, "todos"), {
+        content: newTodo.content,
+        isCompleted: false,
+        isArchived: false,
+        userId: user.uid,
+        createdAt: serverTimestamp()
+      });
+      toast.info(t.addSuccess);
+    } catch (e) { toast.error("Hata!"); }
+  };
 
-    const todoWithDate = {
-      ...newTodo,
-      isCompleted: false,
-      isArchived: false,
-      createdAt: Date.now()
-    };
-
-    playSound('add');
-    setTodos([todoWithDate, ...todos]);
-    toast.info(t.addSuccess);
-  }
-
-  const removeTodo = (todoId) => {
+  const removeTodo = async (id) => {
     playSound('delete');
-    setTodos(todos.filter((todo) => todo.id !== todoId));
-    toast.error(t.deleteSuccess);
-  }
+    try { await deleteDoc(doc(db, "todos", id)); toast.error(t.deleteSuccess); } catch (e) { }
+  };
 
-  const updateTodo = (newTodo) => {
-    if (!newTodo.content || newTodo.content.trim() === "") {
-      playSound('warn');
-      toast.warn(t.updateWarn || t.emptyWarn);
-      return;
-    }
-    setTodos(todos.map((todo) => todo.id !== newTodo.id ? todo : newTodo));
-    toast.success(t.updateSuccess);
-  }
+  const updateTodo = async (newTodo) => {
+    if (!newTodo.content?.trim()) return;
+    try {
+      await updateDoc(doc(db, "todos", newTodo.id), { content: newTodo.content });
+      toast.success(t.updateSuccess);
+    } catch (e) { }
+  };
 
-  const toggleCompleteTodo = (id) => {
-    setTodos(todos.map((todo) => {
-      if (todo.id === id) {
-        if (todo.isArchived) {
-          playSound('add');
-          toast.success(lang === 'tr' ? "Hedef geri yüklendi!" : "Task restored!");
-          return { ...todo, isArchived: false, isCompleted: false };
-        }
-        const newStatus = !todo.isCompleted;
-        if (newStatus) {
-          playSound('add');
-          toast.success(t.congrats, { icon: "😊" });
-        }
-        return { ...todo, isCompleted: newStatus };
+  const toggleCompleteTodo = async (id) => {
+    const todo = todos.find(t => t.id === id);
+    if (!todo) return;
+    try {
+      if (todo.isArchived) {
+        playSound('add');
+        await updateDoc(doc(db, "todos", id), { isArchived: false, isCompleted: false });
+      } else {
+        await updateDoc(doc(db, "todos", id), { isCompleted: !todo.isCompleted });
+        if (!todo.isCompleted) playSound('add');
       }
-      return todo;
-    }));
-  }
+    } catch (e) { }
+  };
 
   const clearAllTodos = () => {
+    if (todos.length === 0) return;
     Swal.fire({
       title: t.confirmAllDelete,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#6c63ff',
-      cancelButtonColor: '#d33',
       confirmButtonText: lang === 'tr' ? 'Evet, sil!' : 'Yes, delete!',
-      cancelButtonText: lang === 'tr' ? 'İptal' : 'Cancel',
-      background: theme === 'dark' ? '#2d3436' : '#fff',
-      color: theme === 'dark' ? '#fff' : '#000',
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        playSound('delete');
-        setTodos([]);
+        const batch = writeBatch(db);
+        todos.forEach((todo) => batch.delete(doc(db, "todos", todo.id)));
+        await batch.commit();
         toast.error(t.deleteSuccess);
       }
     });
   };
 
   const clearCompletedTodos = () => {
-    const completedExist = todos.some(todo => todo.isCompleted && !todo.isArchived);
-    if (!completedExist) {
-      toast.warn(lang === 'tr' ? "Arşivlenecek hedef bulunamadı." : "Nothing to archive.");
-      playSound('warn');
-      return;
-    }
+    const completedOnes = todos.filter(todo => todo.isCompleted && !todo.isArchived);
+    if (completedOnes.length === 0) return;
+    const batch = writeBatch(db);
+    completedOnes.forEach(todo => batch.update(doc(db, "todos", todo.id), { isArchived: true }));
+    batch.commit();
+    toast.info(lang === 'tr' ? "Tamamlananlar arşivlendi." : "Completed archived.");
+  };
 
-    Swal.fire({
-      title: lang === 'tr' ? 'Tamamlananlar Arşivlensin mi?' : 'Archive Completed?',
-      icon: 'info',
-      showCancelButton: true,
-      confirmButtonColor: '#6c63ff',
-      confirmButtonText: lang === 'tr' ? 'Evet, arşivle!' : 'Yes, archive!',
-      cancelButtonText: lang === 'tr' ? 'Vazgeç' : 'Cancel',
-      background: theme === 'dark' ? '#2d3436' : '#fff',
-      color: theme === 'dark' ? '#fff' : '#000',
-    }).then((result) => {
-      if (result.isConfirmed) {
-        playSound('add');
-        setTodos(todos.map(todo => todo.isCompleted && !todo.isArchived ? { ...todo, isArchived: true } : todo));
-        toast.success(lang === 'tr' ? "Hedefler arşive taşındı! 📦" : "Tasks archived! 📦");
-      }
-    });
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), useSensor(KeyboardSensor));
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setTodos((items) => arrayMove(items, items.findIndex(i => i.id === active.id), items.findIndex(i => i.id === over.id)));
+    }
   };
 
   const filteredTodos = todos.filter(todo => {
@@ -201,58 +281,67 @@ function App() {
     return true;
   });
 
-  const sortedTodos = [...filteredTodos].sort((a, b) => {
-    if (a.isCompleted === b.isCompleted) return 0;
-    return a.isCompleted ? 1 : -1;
-  });
-
+  const sortedTodos = [...filteredTodos].sort((a, b) => (a.isCompleted === b.isCompleted ? 0 : a.isCompleted ? 1 : -1));
   const activeTodosOnly = todos.filter(t => !t.isArchived);
-  const totalTodos = activeTodosOnly.length;
-  const completedCount = activeTodosOnly.filter(t => t.isCompleted).length;
-  const progressPercentage = totalTodos > 0 ? (completedCount / totalTodos) * 100 : 0;
+  const progressPercentage = activeTodosOnly.length > 0 ? (activeTodosOnly.filter(t => t.isCompleted).length / activeTodosOnly.length) * 100 : 0;
+
+  if (authLoading) return <div className="loading-screen">Lütfen bekleyin...</div>;
 
   return (
     <div className='App'>
       <div className="system-controls">
+        {user && (
+          <div className="user-profile-mini">
+            <img
+              src={user.providerData?.[0]?.photoURL || user.photoURL || `https://api.dicebear.com/8.x/notionists-neutral/svg?seed=${user.uid}`}
+              alt="Avatar"
+              className={`user-avatar-small ${user.isAnonymous ? 'is-guest' : ''}`}
+              onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=User&background=6c63ff&color=fff` }}
+            />
+          </div>
+        )}
+
         <div className="settings-container">
           <button className="settings-btn" onClick={() => setShowSettings(!showSettings)}>
             <IoMdSettings />
           </button>
-
           <AnimatePresence>
             {showSettings && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="settings-menu"
-              >
+              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="settings-menu">
                 <div className="setting-item">
-                  <span>{lang === 'tr' ? "Dil / Language" : "Language / Dil"}</span>
-                  <select
-                    className="lang-select"
-                    value={lang}
-                    onChange={(e) => setLang(e.target.value)}
-                  >
+                  <span>Language</span>
+                  <select className="lang-select" value={lang} onChange={(e) => setLang(e.target.value)}>
                     <option value="tr">Türkçe 🇹🇷</option>
                     <option value="en">English 🇺🇸</option>
                   </select>
                 </div>
                 <div className="setting-item">
                   <span>{t.soundEffects}</span>
-                  <div
-                    className={`switch ${isSoundEnabled ? 'on' : 'off'}`}
-                    onClick={() => setIsSoundEnabled(!isSoundEnabled)}
-                  >
+                  <div className={`switch ${isSoundEnabled ? 'on' : 'off'}`} onClick={() => setIsSoundEnabled(!isSoundEnabled)}>
                     <div className="switch-handle" />
                   </div>
                 </div>
+
+                {user && (
+                  <>
+                    {user.isAnonymous && (
+                      <div className="setting-item action" onClick={handleUpgradeAccount}>
+                        <span>{lang === 'tr' ? 'Hesabı Google\'a Bağla' : 'Link to Google'}</span>
+                        <FaGoogle className="icon-blue" />
+                      </div>
+                    )}
+                    <div className="setting-item action logout" onClick={handleLogout}>
+                      <span>{lang === 'tr' ? 'Oturumu Kapat' : 'Logout'}</span>
+                      <FaSignOutAlt />
+                    </div>
+                  </>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        <button className="theme-toggle-btn" onClick={toggleTheme}>
+        <button className="theme-toggle-btn" onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
           {theme === "light" ? <FaMoon /> : <FaSun />}
         </button>
       </div>
@@ -260,52 +349,59 @@ function App() {
       <h1 className='todo-header'>{filter === "archive" ? (lang === 'tr' ? "Arşiv" : "Archive") : t.header}</h1>
 
       <div className='main'>
-        {filter !== "archive" && (
+        {!user ? (
+          <div className="login-container">
+            <div className="login-card-mini">
+              <p className="login-text">{lang === 'tr' ? "Hedeflerinize ulaşmak için bir yöntem seçin" : "Choose a method"}</p>
+              <div className="login-options">
+                <div className="login-option-item">
+                  <button onClick={handleLogin} className="login-icon-btn google"><FcGoogle /></button>
+                  <span>Google</span>
+                </div>
+                <div className="login-option-item">
+                  <button className="login-icon-btn guest" onClick={handleGuestLogin}><div className="guest-icon-placeholder">👤</div></button>
+                  <span>{lang === 'tr' ? "Misafir" : "Guest"}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
           <>
-            <TodoCreate onCreateTodo={handleAddTodo} t={t} playSound={playSound} />
-            {totalTodos > 0 && <ProgressBar percentage={progressPercentage} t={t} />}
+            {filter !== "archive" && (
+              <>
+                <TodoCreate onCreateTodo={handleAddTodo} t={t} playSound={playSound} />
+                {activeTodosOnly.length > 0 && <ProgressBar percentage={progressPercentage} t={t} />}
+              </>
+            )}
+
+            <TodoFilter
+              currentFilter={filter}
+              onFilterChange={setFilter}
+              t={t}
+              onClearAll={clearAllTodos}
+              onClearCompleted={clearCompletedTodos}
+            />
+
+
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <TodoList
+                todos={sortedTodos}
+                onRemoveTodo={removeTodo}
+                onUpdateTodo={updateTodo}
+                onToggleComplete={toggleCompleteTodo}
+                t={t}
+                lang={lang}
+                playSound={playSound}
+              />
+            </DndContext>
           </>
         )}
-
-        <TodoFilter
-          currentFilter={filter}
-          onFilterChange={setFilter}
-          t={t}
-          onClearAll={clearAllTodos}
-          onClearCompleted={clearCompletedTodos}
-        />
-
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <TodoList
-            todos={sortedTodos}
-            onRemoveTodo={removeTodo}
-            onUpdateTodo={updateTodo}
-            onToggleComplete={toggleCompleteTodo}
-            t={t}
-            playSound={playSound}
-          />
-        </DndContext>
-
-        {filter === "archive" && sortedTodos.length === 0 && (
-          <p className="empty-text" style={{ textAlign: 'center', marginTop: '20px', opacity: 0.6 }}>
-            {lang === 'tr' ? "Arşiviniz boş. 📭" : "Archive is empty. 📭"}
-          </p>
-        )}
       </div>
-
-      <ToastContainer
-        theme={theme === "dark" ? "dark" : "light"}
-        limit={3}
-        autoClose={2000}
-        position="top-right"
-        style={{ zIndex: 99999 }}
-      />
-
+      <ToastContainer theme={theme === "dark" ? "dark" : "light"} limit={3} autoClose={2000} />
       <footer className="footer">
         <p>{t.footerText} <span className="footer-name">Kutay Mutlu</span></p>
       </footer>
     </div>
   )
 }
-
 export default App;

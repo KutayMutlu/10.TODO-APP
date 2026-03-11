@@ -2,15 +2,16 @@ import React, { useState, useEffect, useRef } from 'react'
 import { IoIosRemoveCircle } from "react-icons/io";
 import { FaEdit, FaCheck } from "react-icons/fa";
 import { RiCheckboxLine } from "react-icons/ri";
-import { MdDragIndicator, MdSettingsBackupRestore } from "react-icons/md"; // Geri yükleme ikonu eklendi
+import { MdDragIndicator, MdSettingsBackupRestore } from "react-icons/md";
 import "../App.css"
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { motion } from 'framer-motion';
+import { toast } from 'react-toastify';
 
-function Todo({ todo, onRemoveTodo, onUpdateTodo, onToggleComplete, t }) {
-    // 1. KONTROL: isArchived prop'u yıkıma (destructuring) eklendi
-    const { id, content, isCompleted, createdAt, isArchived } = todo;
+// 1. KONTROL: 'lang' prop'unu doğrudan alıyoruz ki dil değişince tarih anında tetiklensin
+function Todo({ todo, onRemoveTodo, onUpdateTodo, onToggleComplete, t, lang, playSound, isSoundEnabled }) {
+    const { id, content, isCompleted, createdAt, isArchived, displayDate } = todo;
     const [editable, setEditable] = useState(false);
     const [newTodo, setNewTodo] = useState(content);
     const [isShaking, setIsShaking] = useState(false);
@@ -22,25 +23,35 @@ function Todo({ todo, onRemoveTodo, onUpdateTodo, onToggleComplete, t }) {
 
     const style = {
         transform: CSS.Translate.toString(transform),
-        // Eğer sürükleme bittiyse dnd-kit'in kendi geçişini (transition) kullan, 
-        // ama o da yoksa tamamen 'none' yap ki zıplama olmasın.
         transition: isDragging ? 'none' : (transition || 'transform 200ms ease'),
         zIndex: isDragging ? 999 : 1,
         opacity: isDragging ? 0.6 : (isArchived ? 0.7 : 1),
         touchAction: 'none',
-        // Sürükleme bittiğinde tarayıcının 'all' geçişi yapmasını engellemek için:
         willChange: 'transform'
     };
 
-    const formatDate = (timestamp) => {
-        if (!timestamp) return "";
+    // 2. KONTROL: Dil değişimine duyarlı Güvenli Formatter
+    const formatDate = (dateValue) => {
+        if (!dateValue) return "";
         try {
-            const currentLang = t?.buttonText === "HEDEF EKLE" ? 'tr-TR' : 'en-US';
-            return new Date(timestamp).toLocaleString(currentLang, {
+            let d;
+            if (dateValue && dateValue.seconds) {
+                d = new Date(dateValue.seconds * 1000);
+            } else {
+                d = new Date(dateValue);
+            }
+
+            if (isNaN(d.getTime())) return "";
+
+            const locale = lang === 'tr' ? 'tr-TR' : 'en-US';
+
+            return d.toLocaleString(locale, {
+                year: 'numeric',   // 1. KONTROL: Yıl bilgisini ekledik
                 day: '2-digit',
                 month: 'short',
                 hour: '2-digit',
-                minute: '2-digit'
+                minute: '2-digit',
+                hour12: lang !== 'tr'
             });
         } catch (error) {
             return "";
@@ -55,22 +66,28 @@ function Todo({ todo, onRemoveTodo, onUpdateTodo, onToggleComplete, t }) {
         }
     }, [editable]);
 
+    useEffect(() => {
+        setNewTodo(content);
+    }, [content]);
+
     const handleUpdate = () => {
-        // İçerik boş olsa bile App.jsx'e gönderiyoruz ki uyarı mekanizması çalışsın
+        if (newTodo.trim() === "") {
+            setIsShaking(true);
+            playSound("warn");
+            // Toast kullanımı
+            toast.warn(t.emptyWarn || "İçerik boş olamaz!");
+            setTimeout(() => setIsShaking(false), 250);
+            return;
+        }
+
+        // Eğer boş değilse güncellemeyi yap
         const updatedTodo = {
             ...todo,
-            content: newTodo // State'teki yeni (veya boş) içerik
+            content: newTodo.trim() // Boşlukları temizleyerek kaydet
         };
 
         onUpdateTodo(updatedTodo);
-
-        // Eğer içerik boş değilse düzenleme modundan çık
-        if (newTodo.trim() !== "") {
-            setEditable(false);
-        } else {
-            setIsShaking(true);
-            setTimeout(() => setIsShaking(false), 250);
-        }
+        setEditable(false);
     }
 
     const handleRemoveRequest = (e) => {
@@ -82,12 +99,9 @@ function Todo({ todo, onRemoveTodo, onUpdateTodo, onToggleComplete, t }) {
         }, 250);
     }
 
-
-
     return (
         <div ref={setNodeRef} style={style} className={`todo-row-container ${isShaking ? 'shake' : ''}`}>
 
-            {/* Arşivdeyken sürükle-bırak genellikle kapalı olur ama tutarlılık için ikonu koruyoruz */}
             <div className="drag-handle" {...attributes} {...listeners}>
                 <MdDragIndicator style={{ fontSize: '24px', opacity: isArchived ? 0.3 : 0.6 }} />
             </div>
@@ -96,12 +110,11 @@ function Todo({ todo, onRemoveTodo, onUpdateTodo, onToggleComplete, t }) {
                 whileTap={{ scale: 0.8 }}
                 onClick={(e) => { e.stopPropagation(); onToggleComplete(id); }}
             >
-                {/* 3. KONTROL: Arşivdeyse 'Geri Yükle', değilse 'Tamamla' ikonu gösterilir */}
                 {isArchived ? (
                     <MdSettingsBackupRestore
                         className='todo-icons icon-restore'
                         style={{ color: '#7d5fff', fontSize: '32px', cursor: 'pointer' }}
-                        title={t?.archiveTitle || "Geri Yükle"}
+                        title={t?.archiveTitle || "Restore"}
                     />
                 ) : (
                     <RiCheckboxLine
@@ -125,7 +138,7 @@ function Todo({ todo, onRemoveTodo, onUpdateTodo, onToggleComplete, t }) {
                             className='todo-input edit-mode-input'
                             value={newTodo}
                             onChange={(e) => setNewTodo(e.target.value)}
-                            onKeyDown={(e) => e.key === "Enter" && handleUpdate(e)}
+                            onKeyDown={(e) => e.key === "Enter" && handleUpdate()}
                             onClick={(e) => e.stopPropagation()}
                             style={{ width: "100%", fontSize: "15px", background: "transparent", borderBottom: '1px solid var(--primary-color)' }}
                         />
@@ -141,7 +154,9 @@ function Todo({ todo, onRemoveTodo, onUpdateTodo, onToggleComplete, t }) {
                             >
                                 {content}
                             </span>
-                            <span style={{ fontSize: '10px', opacity: 0.4, marginTop: '4px', fontWeight: '300' }}>
+                            {/* 5. KONTROL: displayDate yerine her zaman formatDate(createdAt) kullanıyoruz 
+                                ki dil değişince bu fonksiyon yeniden hesaplansın */}
+                            <span className='date-css'>
                                 {formatDate(createdAt)}
                             </span>
                         </>
@@ -157,7 +172,6 @@ function Todo({ todo, onRemoveTodo, onUpdateTodo, onToggleComplete, t }) {
                         />
                     </motion.div>
 
-                    {/* Arşivdeki elemanlar düzenlenemez, önce geri yüklenmelidir */}
                     {!isArchived && (
                         editable ? (
                             <motion.div whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }}>
