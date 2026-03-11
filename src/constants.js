@@ -1,6 +1,6 @@
 export const translations = {
     tr: {
-        header: "To-Do List",
+        header: "To-Do Lıst",
         completedTitle: "Tamamlanan Hedefler",
         emptyWarn: "Lütfen bir hedef giriniz! ⚠️",
         deleteConfirm: "Bu hedefi silmek istediğinize emin misiniz? 🗑️",
@@ -27,7 +27,7 @@ export const translations = {
         soundEffects: "Ses Efektleri"
     },
     en: {
-        header: "To-Do List",
+        header: "To-Do Lıst",
         completedTitle: "Completed Tasks",
         emptyWarn: "Please enter a task! ⚠️",
         deleteConfirm: "Are you sure you want to delete this task? 🗑️",
