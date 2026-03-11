@@ -1,4 +1,4 @@
-const CACHE_NAME = "kutay-todo-v10";
+const CACHE_NAME = "kutay-todo-v11";
 
 self.addEventListener("install", (event) => {
     self.skipWaiting();
@@ -14,25 +14,27 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-    // Sadece kendi sitemizin isteklerini ve GET metotlarını yakala
+    // Sadece GET isteklerini ve kendi sitemizi işle
     if (event.request.method !== 'GET' || !event.request.url.startsWith(self.location.origin)) return;
 
     event.respondWith(
-        caches.open(CACHE_NAME).then((cache) => {
-            return cache.match(event.request).then((cachedResponse) => {
-                const fetchPromise = fetch(event.request).then((networkResponse) => {
-                    // Eğer internetten gelen cevap sağlamsa, cache'i güncelle
-                    if (networkResponse && networkResponse.status === 200) {
-                        cache.put(event.request, networkResponse.clone());
-                    }
-                    return networkResponse;
-                }).catch(() => {
-                    // Tamamen çevrimdışıysak ve cache'de yoksa hata verme, sessiz kal
-                });
+        fetch(event.request)
+            .then((networkResponse) => {
+                // Eğer cevap null veya hatalıysa cache'e bak
+                if (!networkResponse || networkResponse.status !== 200) {
+                    return caches.match(event.request);
+                }
 
-                // Varsa cache'den dön, yoksa internetten geleni bekle
-                return cachedResponse || fetchPromise;
-            });
-        })
+                // Cevap sağlamsa cache'e at ve dön
+                const responseClone = networkResponse.clone();
+                caches.open(CACHE_NAME).then((cache) => {
+                    cache.put(event.request, responseClone);
+                });
+                return networkResponse;
+            })
+            .catch(() => {
+                // İnternet tamamen kopuksa veya fetch çökerse cache'den getir
+                return caches.match(event.request);
+            })
     );
 });
