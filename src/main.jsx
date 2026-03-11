@@ -9,17 +9,5 @@ createRoot(document.getElementById('root')).render(
   </StrictMode>
 )
 
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js?v=17')
-      .then(registration => {
-        console.log('SW Kayıtlı');
-
-        // Periyodik güncelleme kontrolü (Safari'yi uyanık tutar)
-        setInterval(() => {
-          registration.update();
-        }, 1000 * 60 * 60); // Saatte bir kontrol
-      })
-      .catch(err => console.log('SW Hatası:', err));
-  });
-}
+// Buradaki tüm if ('serviceWorker' in navigator) bloklarını sildik.
+// Eklenti build sırasında kendi kayıt kodunu otomatik olarak ekleyecek.
