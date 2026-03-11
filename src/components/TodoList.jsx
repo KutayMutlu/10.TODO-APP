@@ -24,7 +24,7 @@ function TodoList({ todos, onRemoveTodo, onUpdateTodo, onToggleComplete, t, lang
                 exit={{ opacity: 0, scale: 0.95, x: 10, transition: { duration: 0.2 } }}
                 layout
                 transition={{
-                  layout: { duration: 0.15, type: 'spring', stiffness: 300, damping: 30 }
+                  layout: { duration: 0 }
                 }}
               >
                 <Todo
