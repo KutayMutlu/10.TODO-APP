@@ -75,32 +75,40 @@ function App() {
     };
   }, [showSettings]);
 
-  // --- KRİTİK: TEKİL AUTH YÖNETİMİ ---
+  // --- KRİTİK: TEKİL VE OPTİMİZE AUTH YÖNETİMİ (V5 - FINAL) ---
   useEffect(() => {
     let isMounted = true;
-    const initAuth = async () => {
-      try {
-        const result = await getRedirectResult(auth);
-        if (result?.user && isMounted) {
+
+    // 1. KONTROL: Yönlendirme (Google Login) sonucunu arka planda yakala.
+    // Bu işlem asenkrondur ve uygulamanın açılış hızını asla etkilemez.
+    getRedirectResult(auth)
+      .then((result) => {
+        if (isMounted && result?.user) {
           setUser(result.user);
+          // Sadece yeni bir giriş varsa başarı mesajı göster
           toast.success(lang === 'tr' ? "Giriş başarılı!" : "Login successful!");
         }
-      } catch (error) { console.error("Redirect Hatası:", error); }
-
-      const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-        if (isMounted) {
-          setUser(currentUser);
-          setAuthLoading(false);
-        }
+      })
+      .catch((error) => {
+        // Önemli: Tarayıcı kaynaklı iptallerde uygulama çökmemeli.
+        if (isMounted) console.error("Redirect Hatası:", error);
       });
-      return unsubscribe;
-    };
-    const authCleanUp = initAuth();
+
+    // 2. KONTROL: Mevcut oturumu (session) en hızlı şekilde yakala.
+    // Firebase indexedDB'den veriyi okur okumaz burası tetiklenir.
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (isMounted) {
+        setUser(currentUser);
+        setAuthLoading(false); // Oturum durumu (var/yok) kesinleştiğinde loading'i kaldır.
+      }
+    });
+
+    // 3. KONTROL: Cleanup fonksiyonu.
     return () => {
       isMounted = false;
-      authCleanUp.then(unsub => unsub && unsub());
+      unsubscribe();
     };
-  }, [lang]);
+  }, [lang]); // Dil değiştiğinde mesajların doğru dilde çıkması için 'lang' bağımlılığı kalmalı.
 
   // --- VERİ TABANI (FIRESTORE) BAĞLANTISI ---
   useEffect(() => {

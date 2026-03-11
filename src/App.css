@@ -485,10 +485,10 @@ body {
 /* iPhone 14 Pro ve benzeri cihazlar için ekstra hassas ayar */
 @media (max-width: 480px) {
     .wide-toast {
-        width: 85% !important;
+        width: 100% !important;
         padding: 10px 15px !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
+        /* left: 50% !important; */
+        /* transform: translateX(-50%) !important; */
         /* Yatayda tam ortalar */
     }
 }
