@@ -1,28 +1,13 @@
-const CACHE_NAME = "kutay-todo-v17";
-
-// Bu liste, uygulamanın çalışması için gereken "omurga"
-const PRE_CACHE_RESOURCES = [
-    "/",
-    "/index.html",
-    "/manifest.json",
-    "/logo.png"
-];
+const CACHE_NAME = "kutay-todo-final-v18";
 
 self.addEventListener("install", (event) => {
-    // SW kurulurken bu dosyaları zorla indirir
-    event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            console.log("Kritik dosyalar önbelleğe alınıyor...");
-            return cache.addAll(PRE_CACHE_RESOURCES);
-        })
-    );
     self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
     event.waitUntil(
         caches.keys().then((keys) => {
-            return Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)));
+            return Promise.all(keys.map(key => caches.delete(key)));
         })
     );
     self.clients.claim();
@@ -32,27 +17,21 @@ self.addEventListener("fetch", (event) => {
     if (event.request.method !== 'GET') return;
 
     event.respondWith(
-        caches.match(event.request).then((cachedResponse) => {
-            // 1. Eğer hafızada varsa (internete hiç sormadan) anında ver
-            if (cachedResponse) {
-                return cachedResponse;
-            }
+        caches.match(event.request).then((cached) => {
+            // 1. Eğer hafızada varsa anında ver (Beyaz ekranı %100 önler)
+            if (cached) return cached;
 
-            // 2. Hafızada yoksa internetten iste
-            return fetch(event.request)
-                .then((networkResponse) => {
-                    if (networkResponse && networkResponse.status === 200) {
-                        const cacheCopy = networkResponse.clone();
-                        caches.open(CACHE_NAME).then(cache => cache.put(event.request, cacheCopy));
-                    }
-                    return networkResponse;
-                })
-                .catch(() => {
-                    // 3. İnternet yoksa ve hafızada da yoksa ana sayfayı döndür
-                    if (event.request.mode === 'navigate') {
-                        return caches.match("/");
-                    }
-                });
+            // 2. Yoksa internetten çek ve çekmişken hafızaya at
+            return fetch(event.request).then((response) => {
+                if (!response || response.status !== 200) return response;
+
+                const copy = response.clone();
+                caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+                return response;
+            }).catch(() => {
+                // İnternet de yok hafıza da yoksa: Ana sayfayı zorla yükle
+                return caches.match("/");
+            });
         })
     );
 });

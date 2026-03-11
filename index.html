@@ -20,6 +20,17 @@
   <meta name="msapplication-config" content="none" />
   <meta name="msapplication-TileImage" content="/logo512.png">
   <meta name="msapplication-TileColor" content="#6c63ff">
+
+  <script>
+    // Eğer sayfa 3 saniye içinde yüklenmezse (beyaz ekran kalırsa) otomatik yenile
+    if (!window.performance.navigation.type === 1) {
+      setTimeout(() => {
+        if (document.getElementById('root').innerHTML === "") {
+          location.reload();
+        }
+      }, 3000);
+    }
+  </script>
 </head>
 
 <body>
