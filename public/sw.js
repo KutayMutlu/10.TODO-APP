@@ -1,4 +1,4 @@
-const CACHE_NAME = "kutay-todo-v8";
+const CACHE_NAME = "kutay-todo-v10";
 
 self.addEventListener("install", (event) => {
     self.skipWaiting();

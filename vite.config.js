@@ -1,13 +1,12 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/', // KRİTİK: Dosyaların /assets/ şeklinde doğru yollardan çekilmesini sağlar
+  base: '', // Boş bırakmak, Vite'ın yolları ./assets/ şeklinde üretmesini sağlar
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
-    sourcemap: false, // Build dosyasını hafifletir
+    emptyOutDir: true, // Her build'de eski dosyaları temizler
   }
 })
