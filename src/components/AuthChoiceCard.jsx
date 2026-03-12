@@ -1,7 +1,7 @@
 import React from 'react';
 import { FcGoogle } from "react-icons/fc";
 
-function AuthChoiceCard({ lang, t, onLogin, onGuestLogin }) {
+function AuthChoiceCard({ lang, t, onLogin, onGuestLogin, authLoading }) {
   return (
     <div className="login-container">
       <div className="login-card-mini">
@@ -14,8 +14,16 @@ function AuthChoiceCard({ lang, t, onLogin, onGuestLogin }) {
             <span>{t.google}</span>
           </div>
           <div className="login-option-item">
-            <button className="login-icon-btn guest" onClick={onGuestLogin}>
-              <div className="guest-icon-placeholder">👤</div>
+            <button
+              className="login-icon-btn guest"
+              onClick={onGuestLogin}
+              disabled={authLoading}
+            >
+              {authLoading ? (
+                <span className="guest-loading-text">{t.loading}</span>
+              ) : (
+                <div className="guest-icon-placeholder">👤</div>
+              )}
             </button>
             <span>{t.guest}</span>
           </div>

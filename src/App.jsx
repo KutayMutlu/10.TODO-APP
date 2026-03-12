@@ -48,6 +48,7 @@ function App() {
   });
   const [todos, setTodos] = useState([]);
   const [authLoading, setAuthLoading] = useState(true);
+  const [initialAuthChecked, setInitialAuthChecked] = useState(false);
 
   const t = translations[lang];
 
@@ -79,10 +80,10 @@ function App() {
 
     // En hızlı yakalama: onAuthStateChanged
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (isMounted) {
-        setUser(currentUser);
-        setAuthLoading(false); // Kullanıcıyı gördüğün an (veya null ise) içeri al
-      }
+      if (!isMounted) return;
+      setUser(currentUser);
+      setAuthLoading(false); // Kullanıcıyı gördüğün an (veya null ise) içeri al
+      setInitialAuthChecked(true); // İlk auth kontrolü tamam
     });
 
     // Redirect sonucunu sessizce arka planda hallet
@@ -339,8 +340,8 @@ function App() {
     return (completedCount / activeTodosOnly.length) * 100;
   }, [activeTodosOnly]);
 
-  // Sadece henüz kullanıcı bilgisi alınmamışken tam ekran yükleme göster
-  if (authLoading && !user) return <div className="loading-screen">{t.loading}</div>;
+  // Uygulama ilk açılırken (Firebase auth durumu henüz belli değilken) tam ekran yükleme göster
+  if (!initialAuthChecked) return <div className="loading-screen">{t.loading}</div>;
 
   return (
     <div className='App'>
@@ -369,6 +370,7 @@ function App() {
             t={t}
             onLogin={handleLogin}
             onGuestLogin={handleGuestLogin}
+            authLoading={authLoading}
           />
         ) : (
           <>
