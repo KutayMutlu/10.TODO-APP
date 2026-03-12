@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import './App.css'
 import { ToastContainer } from 'react-toastify';
+import Swal from 'sweetalert2';
 import "react-toastify/dist/ReactToastify.css";
 import { translations } from './constants';
 import SystemControls from './components/SystemControls';
@@ -122,6 +123,20 @@ function App() {
     }
   };
 
+  const handleClearAllTodos = () => {
+    if (todos.length === 0) return;
+    Swal.fire({
+      title: t.confirmAllDelete,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: t.confirmDeleteYes,
+    }).then((result) => {
+      if (result.isConfirmed) {
+        clearAllTodos();
+      }
+    });
+  };
+
   const filteredTodos = useMemo(() => {
     if (filter === "archive") return todos.filter(todo => todo.isArchived);
     if (filter === "active") return todos.filter(todo => !todo.isArchived && !todo.isCompleted);
@@ -172,7 +187,7 @@ function App() {
           onGuestLogin={handleGuestLogin}
           onAddTodo={handleAddTodo}
           onFilterChange={setFilter}
-          onClearAll={clearAllTodos}
+          onClearAll={handleClearAllTodos}
           onClearCompleted={clearCompletedTodos}
           sensors={sensors}
           onDragEnd={handleDragEnd}

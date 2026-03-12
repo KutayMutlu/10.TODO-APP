@@ -144,11 +144,12 @@ export function useTodos({ user, t, playSound }) {
   const clearAllTodos = useCallback(() => {
     if (todos.length === 0) return;
     // Swal kullanımı App seviyesinde kalıyor, burada sadece batch işlemi var
+    playSound('delete');
     const batch = writeBatch(db);
     todos.forEach((todo) => batch.delete(doc(db, 'todos', todo.id)));
     batch.commit();
     toast.error(t.deleteSuccess);
-  }, [t, todos]);
+  }, [playSound, t, todos]);
 
   const clearCompletedTodos = useCallback(() => {
     const completedOnes = todos.filter(
