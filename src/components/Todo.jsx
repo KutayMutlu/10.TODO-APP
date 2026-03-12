@@ -26,7 +26,8 @@ function Todo({ todo, onRemoveTodo, onUpdateTodo, onToggleComplete, t, lang, pla
         transition: isDragging ? 'none' : (transition || 'transform 200ms ease'),
         zIndex: isDragging ? 999 : 1,
         opacity: isDragging ? 0.6 : (isArchived ? 0.7 : 1),
-        touchAction: 'none',
+        // Allow vertical scrolling on touch devices; drag is initiated only from handle
+        touchAction: 'pan-y',
         willChange: 'transform'
     };
 
@@ -189,4 +190,4 @@ function Todo({ todo, onRemoveTodo, onUpdateTodo, onToggleComplete, t, lang, pla
     )
 }
 
-export default Todo;
+export default React.memo(Todo);

@@ -1,17 +1,15 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo, lazy, Suspense } from 'react'
 import './App.css'
-import TodoCreate from './components/TodoCreate'
-import TodoList from './components/TodoList'
 import { ToastContainer, toast } from 'react-toastify';
-import { FaSun, FaMoon, FaSignOutAlt, FaGoogle, FaPlus, FaTrash } from "react-icons/fa";
-import { IoMdSettings } from "react-icons/io";
-import { motion, AnimatePresence } from 'framer-motion';
 import "react-toastify/dist/ReactToastify.css";
-import ProgressBar from './components/ProgressBar';
-import TodoFilter from './components/TodoFilter';
+const TodoCreate = lazy(() => import('./components/TodoCreate'));
+const TodoList = lazy(() => import('./components/TodoList'));
+const ProgressBar = lazy(() => import('./components/ProgressBar'));
+const TodoFilter = lazy(() => import('./components/TodoFilter'));
 import Swal from 'sweetalert2';
 import { translations } from './constants';
-import { FcGoogle } from "react-icons/fc";
+import SystemControls from './components/SystemControls';
+import AuthChoiceCard from './components/AuthChoiceCard';
 
 // --- FIREBASE IMPORTLARI ---
 import { auth, provider, db } from "./firebase";
@@ -143,6 +141,7 @@ function App() {
   };
 
   const handleGuestLogin = async () => {
+    if (authLoading) return;
     try {
       setAuthLoading(true);
       let currentUser = auth.currentUser;
@@ -161,6 +160,7 @@ function App() {
   };
 
   const handleUpgradeAccount = async () => {
+    if (authLoading) return;
     try {
       setAuthLoading(true);
       const result = await linkWithPopup(auth.currentUser, provider);
@@ -313,128 +313,93 @@ function App() {
     }
   };
 
-  const filteredTodos = todos.filter(todo => {
-    if (filter === "archive") return todo.isArchived;
-    if (todo.isArchived) return false;
-    if (filter === "active") return !todo.isCompleted;
-    if (filter === "completed") return todo.isCompleted;
-    return true;
-  });
+  const filteredTodos = useMemo(() => {
+    return todos.filter(todo => {
+      if (filter === "archive") return todo.isArchived;
+      if (todo.isArchived) return false;
+      if (filter === "active") return !todo.isCompleted;
+      if (filter === "completed") return todo.isCompleted;
+      return true;
+    });
+  }, [todos, filter]);
 
-  const sortedTodos = [...filteredTodos].sort((a, b) => (a.isCompleted === b.isCompleted ? 0 : a.isCompleted ? 1 : -1));
-  const activeTodosOnly = todos.filter(t => !t.isArchived);
-  const progressPercentage = activeTodosOnly.length > 0 ? (activeTodosOnly.filter(t => t.isCompleted).length / activeTodosOnly.length) * 100 : 0;
+  const sortedTodos = useMemo(
+    () => [...filteredTodos].sort((a, b) => (a.isCompleted === b.isCompleted ? 0 : a.isCompleted ? 1 : -1)),
+    [filteredTodos]
+  );
 
-  if (authLoading) return <div className="loading-screen">Lütfen bekleyin...</div>;
+  const activeTodosOnly = useMemo(
+    () => todos.filter(t => !t.isArchived),
+    [todos]
+  );
+
+  const progressPercentage = useMemo(() => {
+    if (activeTodosOnly.length === 0) return 0;
+    const completedCount = activeTodosOnly.filter(t => t.isCompleted).length;
+    return (completedCount / activeTodosOnly.length) * 100;
+  }, [activeTodosOnly]);
+
+  // Sadece henüz kullanıcı bilgisi alınmamışken tam ekran yükleme göster
+  if (authLoading && !user) return <div className="loading-screen">Lütfen bekleyin...</div>;
 
   return (
     <div className='App'>
-      <div className="system-controls">
-        {user && (
-          <div className="user-profile-mini">
-            <img
-              src={user.providerData?.[0]?.photoURL || user.photoURL || `https://api.dicebear.com/8.x/notionists-neutral/svg?seed=${user.uid}`}
-              alt="Avatar"
-              className={`user-avatar-small ${user.isAnonymous ? 'is-guest' : ''}`}
-              onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=User&background=6c63ff&color=fff` }}
-            />
-          </div>
-        )}
-
-        {/* 3. KONTROL: SETTINGS CONTAINER REF ATAMASI */}
-        <div className="settings-container" ref={settingsRef}>
-          <button className="settings-btn" onClick={() => setShowSettings(!showSettings)}>
-            <IoMdSettings />
-          </button>
-          <AnimatePresence>
-            {showSettings && (
-              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="settings-menu">
-                <div className="setting-item">
-                  <span>Language</span>
-                  <select className="lang-select" value={lang} onChange={(e) => setLang(e.target.value)}>
-                    <option value="tr">Türkçe 🇹🇷</option>
-                    <option value="en">English 🇺🇸</option>
-                  </select>
-                </div>
-                <div className="setting-item">
-                  <span>{t.soundEffects}</span>
-                  <div className={`switch ${isSoundEnabled ? 'on' : 'off'}`} onClick={() => setIsSoundEnabled(!isSoundEnabled)}>
-                    <div className="switch-handle" />
-                  </div>
-                </div>
-
-                {user && (
-                  <>
-                    {user.isAnonymous && (
-                      <div className="setting-item action" onClick={handleUpgradeAccount}>
-                        <span>{lang === 'tr' ? 'Hesabı Google\'a Bağla' : 'Link to Google'}</span>
-                        <FaGoogle className="icon-blue" />
-                      </div>
-                    )}
-                    <div className="setting-item action logout" onClick={handleLogout}>
-                      <span>{lang === 'tr' ? 'Oturumu Kapat' : 'Logout'}</span>
-                      <FaSignOutAlt />
-                    </div>
-                  </>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        <button className="theme-toggle-btn" onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
-          {theme === "light" ? <FaMoon /> : <FaSun />}
-        </button>
-      </div>
+      <SystemControls
+        user={user}
+        lang={lang}
+        t={t}
+        theme={theme}
+        setTheme={setTheme}
+        setLang={setLang}
+        settingsRef={settingsRef}
+        showSettings={showSettings}
+        setShowSettings={setShowSettings}
+        isSoundEnabled={isSoundEnabled}
+        setIsSoundEnabled={setIsSoundEnabled}
+        handleUpgradeAccount={handleUpgradeAccount}
+        handleLogout={handleLogout}
+      />
 
       <h1 className='todo-header'>{filter === "archive" ? (lang === 'tr' ? "Arşiv" : "Archive") : t.header}</h1>
 
       <div className='main'>
         {!user ? (
-          <div className="login-container">
-            <div className="login-card-mini">
-              <p className="login-text">{lang === 'tr' ? "Hedeflerinize ulaşmak için bir yöntem seçin" : "Choose a method"}</p>
-              <div className="login-options">
-                <div className="login-option-item">
-                  <button onClick={handleLogin} className="login-icon-btn google"><FcGoogle /></button>
-                  <span>Google</span>
-                </div>
-                <div className="login-option-item">
-                  <button className="login-icon-btn guest" onClick={handleGuestLogin}><div className="guest-icon-placeholder">👤</div></button>
-                  <span>{lang === 'tr' ? "Misafir" : "Guest"}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <AuthChoiceCard
+            lang={lang}
+            onLogin={handleLogin}
+            onGuestLogin={handleGuestLogin}
+          />
         ) : (
           <>
-            {filter !== "archive" && (
-              <>
-                <TodoCreate onCreateTodo={handleAddTodo} t={t} playSound={playSound} />
-                {activeTodosOnly.length > 0 && <ProgressBar percentage={progressPercentage} t={t} />}
-              </>
-            )}
+            <Suspense fallback={null}>
+              {filter !== "archive" && (
+                <>
+                  <TodoCreate onCreateTodo={handleAddTodo} t={t} playSound={playSound} />
+                  {activeTodosOnly.length > 0 && <ProgressBar percentage={progressPercentage} t={t} />}
+                </>
+              )}
 
-            <TodoFilter
-              currentFilter={filter}
-              onFilterChange={setFilter}
-              t={t}
-              onClearAll={clearAllTodos}
-              onClearCompleted={clearCompletedTodos}
-            />
-
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-              <TodoList
-                todos={sortedTodos}
-                setTodos={setTodos}
-                onRemoveTodo={removeTodo}
-                onUpdateTodo={updateTodo}
-                onToggleComplete={toggleCompleteTodo}
+              <TodoFilter
+                currentFilter={filter}
+                onFilterChange={setFilter}
                 t={t}
-                lang={lang}
-                playSound={playSound}
+                onClearAll={clearAllTodos}
+                onClearCompleted={clearCompletedTodos}
               />
-            </DndContext>
+
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <TodoList
+                  todos={sortedTodos}
+                  setTodos={setTodos}
+                  onRemoveTodo={removeTodo}
+                  onUpdateTodo={updateTodo}
+                  onToggleComplete={toggleCompleteTodo}
+                  t={t}
+                  lang={lang}
+                  playSound={playSound}
+                />
+              </DndContext>
+            </Suspense>
           </>
         )}
       </div>

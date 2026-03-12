@@ -70,4 +70,4 @@ function TodoList({ todos, onRemoveTodo, onUpdateTodo, onToggleComplete, t, lang
   )
 }
 
-export default TodoList;
+export default React.memo(TodoList);

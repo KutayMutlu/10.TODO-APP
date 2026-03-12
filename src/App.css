@@ -703,9 +703,10 @@ body {
     /* Çok parlak olmasın, arka planda kalsın */
 }
 
+/* Drag ayarları: yalnızca drag-handle yatay sürüklemeyi yakalasın,
+   kartların kendisi mobilde dikey kaydırmaya izin versin. */
 .todo-row-container {
-    touch-action: none;
-    /* Kütüphanenin dokunmatiği tam kontrol etmesini sağlar */
+    touch-action: pan-y;
     cursor: grab;
 }
 

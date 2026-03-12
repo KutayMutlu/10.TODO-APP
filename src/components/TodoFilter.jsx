@@ -68,4 +68,4 @@ function TodoFilter({ currentFilter, onFilterChange, t, onClearAll, onClearCompl
     );
 }
 
-export default TodoFilter;
+export default React.memo(TodoFilter);

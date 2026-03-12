@@ -26,4 +26,4 @@ function ProgressBar({ percentage, t }) {
     );
 }
 
-export default ProgressBar;
+export default React.memo(ProgressBar);

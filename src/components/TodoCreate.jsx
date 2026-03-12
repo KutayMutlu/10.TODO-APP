@@ -63,4 +63,4 @@ function TodoCreate({ onCreateTodo, t, playSound }) {
     )
 }
 
-export default TodoCreate;
+export default React.memo(TodoCreate);
