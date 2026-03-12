@@ -1,0 +1,60 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner() {
+      return isSignedIn()
+        && request.resource.data.userId == request.auth.uid;
+    }
+
+    function isExistingOwner() {
+      return isSignedIn()
+        && resource.data.userId == request.auth.uid;
+    }
+
+    function hasValidTodoFields() {
+      return
+        request.resource.data.keys().hasAll([
+          'content',
+          'isCompleted',
+          'isArchived',
+          'userId',
+          'createdAt'
+        ])
+        && request.resource.data.content is string
+        && request.resource.data.isCompleted is bool
+        && request.resource.data.isArchived is bool
+        && request.resource.data.userId is string
+        && request.resource.data.content.size() > 0
+        && request.resource.data.content.size() <= 1000;
+    }
+
+    match /todos/{todoId} {
+
+      allow create: if isSignedIn()
+        && hasValidTodoFields()
+        && request.resource.data.userId == request.auth.uid;
+
+      allow get, list: if isSignedIn()
+        && resource.data.userId == request.auth.uid;
+
+      allow update: if isSignedIn()
+        && isExistingOwner()
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.createdAt == resource.data.createdAt
+        && hasValidTodoFields();
+
+      allow delete: if isSignedIn()
+        && isExistingOwner();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
