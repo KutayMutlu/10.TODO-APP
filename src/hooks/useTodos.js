@@ -143,7 +143,11 @@ export function useTodos({ user, t, playSound }) {
 
   const clearAllTodos = useCallback(() => {
     const nonArchived = todos.filter((todo) => !todo.isArchived);
-    if (nonArchived.length === 0) return;
+    if (nonArchived.length === 0) {
+      playSound('warn');
+      toast.warn(t.noDeletableTodos);
+      return;
+    }
     // Swal kullanımı App seviyesinde kalıyor, burada sadece batch işlemi var
     playSound('delete');
     const batch = writeBatch(db);
@@ -157,6 +161,7 @@ export function useTodos({ user, t, playSound }) {
       (todo) => todo.isCompleted && !todo.isArchived
     );
     if (completedOnes.length === 0) {
+      playSound('warn');
       toast.warn(t.noArchivableSelected);
       return;
     }
