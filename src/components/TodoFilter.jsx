@@ -114,20 +114,18 @@ function TodoFilter({
             )}
 
             {selectionMode && currentFilter !== 'archive' && (
-                <>
+                <div className="selection-row">
+                    <button
+                        type="button"
+                        className="selection-all-btn"
+                        onClick={onSelectAll}
+                    >
+                        {t.selectAll}
+                    </button>
                     <div className="selection-info">
                         <span>{t.selectedLabel} {selectedCount}</span>
                     </div>
-                    <div className="selection-all-container">
-                        <button
-                            type="button"
-                            className="selection-all-btn"
-                            onClick={onSelectAll}
-                        >
-                            {t.selectAll}
-                        </button>
-                    </div>
-                </>
+                </div>
             )}
         </div>
     );
