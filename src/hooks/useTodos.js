@@ -1,0 +1,191 @@
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { db } from '../firebase';
+import {
+  collection,
+  addDoc,
+  deleteDoc,
+  doc,
+  updateDoc,
+  onSnapshot,
+  query,
+  orderBy,
+  serverTimestamp,
+  writeBatch,
+  where,
+} from 'firebase/firestore';
+import { toast } from 'react-toastify';
+
+const formatFirebaseDate = (date) => {
+  if (!date) return '---';
+  try {
+    if (date.seconds) return new Date(date.seconds * 1000).toLocaleString();
+    const d = new Date(date);
+    return isNaN(d.getTime()) ? '---' : d.toLocaleString();
+  } catch (e) {
+    return '---';
+  }
+};
+
+export function useTodos({ user, t, playSound }) {
+  const [todos, setTodos] = useState([]);
+
+  useEffect(() => {
+    if (!user) {
+      setTodos([]);
+      return;
+    }
+
+    const q = query(
+      collection(db, 'todos'),
+      where('userId', '==', user.uid),
+      orderBy('createdAt', 'desc')
+    );
+
+    const unsubscribe = onSnapshot(
+      q,
+      (querySnapshot) => {
+        const todosArray = [];
+        querySnapshot.forEach((snapshotDoc) => {
+          const data = snapshotDoc.data();
+          todosArray.push({
+            ...data,
+            id: snapshotDoc.id,
+            displayDate: formatFirebaseDate(data.createdAt),
+          });
+        });
+        setTodos(todosArray);
+      },
+      (error) => {
+        console.error('Firestore Hatası:', error);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [user]);
+
+  const handleAddTodo = useCallback(
+    async (newTodo) => {
+      if (!user || !newTodo.content?.trim()) {
+        if (!newTodo.content?.trim()) {
+          playSound('warn');
+          toast.warn(t.emptyWarn);
+        }
+        return;
+      }
+      try {
+        playSound('add');
+        await addDoc(collection(db, 'todos'), {
+          content: newTodo.content,
+          isCompleted: false,
+          isArchived: false,
+          userId: user.uid,
+          createdAt: serverTimestamp(),
+        });
+        toast.info(t.addSuccess);
+      } catch (e) {
+        toast.error('Hata!');
+      }
+    },
+    [playSound, t, user]
+  );
+
+  const removeTodo = useCallback(
+    async (id) => {
+      playSound('delete');
+      try {
+        await deleteDoc(doc(db, 'todos', id));
+        toast.error(t.deleteSuccess);
+      } catch (e) {
+        // sessizce yut
+      }
+    },
+    [playSound, t]
+  );
+
+  const updateTodo = useCallback(
+    async (newTodo) => {
+      if (!newTodo.content?.trim()) return;
+      try {
+        await updateDoc(doc(db, 'todos', newTodo.id), {
+          content: newTodo.content,
+        });
+        toast.success(t.updateSuccess);
+      } catch (e) {
+        // sessizce yut
+      }
+    },
+    [t]
+  );
+
+  const toggleCompleteTodo = useCallback(
+    async (id) => {
+      const todo = todos.find((tItem) => tItem.id === id);
+      if (!todo) return;
+      try {
+        if (todo.isArchived) {
+          playSound('add');
+          await updateDoc(doc(db, 'todos', id), {
+            isArchived: false,
+            isCompleted: false,
+          });
+        } else {
+          await updateDoc(doc(db, 'todos', id), {
+            isCompleted: !todo.isCompleted,
+          });
+          if (!todo.isCompleted) playSound('add');
+        }
+      } catch (e) {
+        // sessizce yut
+      }
+    },
+    [playSound, todos]
+  );
+
+  const clearAllTodos = useCallback(() => {
+    if (todos.length === 0) return;
+    // Swal kullanımı App seviyesinde kalıyor, burada sadece batch işlemi var
+    const batch = writeBatch(db);
+    todos.forEach((todo) => batch.delete(doc(db, 'todos', todo.id)));
+    batch.commit();
+    toast.error(t.deleteSuccess);
+  }, [t, todos]);
+
+  const clearCompletedTodos = useCallback(() => {
+    const completedOnes = todos.filter(
+      (todo) => todo.isCompleted && !todo.isArchived
+    );
+    if (completedOnes.length === 0) return;
+    const batch = writeBatch(db);
+    completedOnes.forEach((todo) =>
+      batch.update(doc(db, 'todos', todo.id), { isArchived: true })
+    );
+    batch.commit();
+    toast.info(t.archiveCompletedInfo);
+  }, [t, todos]);
+
+  const activeTodosOnly = useMemo(
+    () => todos.filter((tItem) => !tItem.isArchived),
+    [todos]
+  );
+
+  const progressPercentage = useMemo(() => {
+    if (activeTodosOnly.length === 0) return 0;
+    const completedCount = activeTodosOnly.filter((tItem) => tItem.isCompleted)
+      .length;
+    return (completedCount / activeTodosOnly.length) * 100;
+  }, [activeTodosOnly]);
+
+  return {
+    todos,
+    setTodos,
+    handleAddTodo,
+    removeTodo,
+    updateTodo,
+    toggleCompleteTodo,
+    clearAllTodos,
+    clearCompletedTodos,
+    activeTodosOnly,
+    progressPercentage,
+  };
+}
+
