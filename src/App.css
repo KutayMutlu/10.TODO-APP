@@ -415,6 +415,38 @@ body {
     color: var(--error-color);
 }
 
+.selection-toggle {
+    background: rgba(108, 99, 255, 0.05);
+    color: var(--primary-color);
+    border: 1px solid rgba(108, 99, 255, 0.3);
+}
+
+.selection-toggle.active {
+    background: var(--primary-color);
+    color: #ffffff;
+    border-color: var(--primary-color);
+}
+
+.dark .selection-toggle {
+    background: rgba(108, 99, 255, 0.15);
+    color: #dfe6ff;
+    border-color: rgba(108, 99, 255, 0.5);
+}
+
+.dark .selection-toggle.active {
+    background: #8e8cff;
+    color: #ffffff;
+    border-color: #8e8cff;
+}
+
+.selection-info {
+    margin-top: 4px;
+    font-size: 12px;
+    opacity: 0.75;
+    color: var(--icon-default);
+    text-align: right;
+}
+
 /* =========================================
    6. TODO LİSTESİ VE ÖĞELER
    ========================================= */

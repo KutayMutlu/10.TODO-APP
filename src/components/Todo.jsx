@@ -113,7 +113,7 @@ function Todo({
     return (
         <div ref={setNodeRef} style={style} className={`todo-row-container ${isShaking ? 'shake' : ''}`}>
 
-            {selectionMode && (
+            {selectionMode && !isArchived && (
                 <div
                     className="todo-select-checkbox"
                     onClick={(e) => {

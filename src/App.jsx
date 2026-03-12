@@ -184,7 +184,12 @@ function App() {
       confirmButtonText: t.confirmDeleteYes,
     }).then((result) => {
       if (result.isConfirmed) {
-        deleteSelected(selectedIds);
+        const deletable = selectedIds.filter((id) => {
+          const todo = todos.find((t) => t.id === id);
+          return todo && !todo.isArchived;
+        });
+        if (deletable.length === 0) return;
+        deleteSelected(deletable);
         setSelectedIds([]);
       }
     });

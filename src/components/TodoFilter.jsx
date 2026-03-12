@@ -51,11 +51,6 @@ function TodoFilter({
                         className={`bulk-btn selection-toggle ${selectionMode ? 'active' : ''}`}
                     >
                         <span>{selectionMode ? t.selectionModeOff : t.selectionMode}</span>
-                        {selectionMode && (
-                            <span style={{ fontSize: '12px', opacity: 0.8, marginLeft: 6 }}>
-                                {t.selectedLabel} {selectedCount}
-                            </span>
-                        )}
                     </motion.button>
 
                     {selectionMode ? (
@@ -114,6 +109,12 @@ function TodoFilter({
                     <p className="archive-info-text" style={{ fontSize: '0.8rem', opacity: 0.7, padding: '10px' }}>
                         {t.archiveTitle}
                     </p>
+                </div>
+            )}
+
+            {selectionMode && currentFilter !== 'archive' && (
+                <div className="selection-info">
+                    <span>{t.selectedLabel} {selectedCount}</span>
                 </div>
             )}
         </div>
