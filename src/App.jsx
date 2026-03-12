@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import './App.css'
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
 import Swal from 'sweetalert2';
 import "react-toastify/dist/ReactToastify.css";
 import { translations } from './constants';
@@ -163,7 +163,15 @@ function App() {
 
   const handleArchiveSelected = () => {
     if (selectedIds.length === 0) return;
-    archiveSelected(selectedIds);
+    const archivable = selectedIds.filter((id) => {
+      const todo = todos.find((t) => t.id === id);
+      return todo && todo.isCompleted && !todo.isArchived;
+    });
+    if (archivable.length === 0) {
+      toast.warn(t.noArchivableSelected);
+      return;
+    }
+    archiveSelected(archivable);
     setSelectedIds([]);
   };
 
@@ -238,6 +246,8 @@ function App() {
           selectedIds={selectedIds}
           onToggleSelectionMode={handleToggleSelectionMode}
           onToggleSelect={handleToggleSelect}
+          onArchiveSelected={handleArchiveSelected}
+          onDeleteSelected={handleDeleteSelected}
           sensors={sensors}
           onDragEnd={handleDragEnd}
           todos={sortedTodos}

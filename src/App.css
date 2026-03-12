@@ -537,6 +537,20 @@ body {
         top: 10px;
         right: 10px;
     }
+
+    /* Mobilde uzun metinlerin kart yüksekliğini çok artırmaması için:
+       Kapalı kartları sınırlıyoruz, genişletilmiş (expanded) kartlar serbest. */
+    .todo-lists:not(.expanded) {
+        max-height: 90px;
+        overflow: hidden;
+        align-items: center;
+    }
+
+    .todo-lists.expanded {
+        max-height: none;
+        overflow: visible;
+        align-items: flex-start;
+    }
 }
 
 /* Toast ve Profil */
