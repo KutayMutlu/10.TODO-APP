@@ -154,7 +154,7 @@ function App() {
       setUser(currentUser);
       setTimeout(() => {
         toast.warning(lang === 'tr' ? "Hedeflerinizin kaybolmaması için lütfen bir hesap bağlayın." : "Please link an account to prevent data loss.", { autoClose: 5000, position: "top-center", className: 'wide-toast' });
-      }, 1000);
+      }, 500);
     } finally { setAuthLoading(false); }
   };
 
