@@ -160,13 +160,14 @@ export function useTodos({ user, t, playSound }) {
       toast.warn(t.noArchivableSelected);
       return;
     }
+    playSound('add');
     const batch = writeBatch(db);
     completedOnes.forEach((todo) =>
       batch.update(doc(db, 'todos', todo.id), { isArchived: true })
     );
     batch.commit();
     toast.info(t.archiveCompletedInfo);
-  }, [t, todos]);
+  }, [playSound, t, todos]);
 
   const archiveSelected = useCallback(
     (ids) => {
@@ -174,6 +175,7 @@ export function useTodos({ user, t, playSound }) {
         (todo) => ids.includes(todo.id) && !todo.isArchived
       );
       if (toArchive.length === 0) return;
+      playSound('add');
       const batch = writeBatch(db);
       toArchive.forEach((todo) =>
         batch.update(doc(db, 'todos', todo.id), { isArchived: true })
@@ -181,7 +183,7 @@ export function useTodos({ user, t, playSound }) {
       batch.commit();
       toast.info(t.archiveCompletedInfo);
     },
-    [t, todos]
+    [playSound, t, todos]
   );
 
   const completeSelected = useCallback(
@@ -190,6 +192,7 @@ export function useTodos({ user, t, playSound }) {
         (todo) => ids.includes(todo.id) && !todo.isArchived && !todo.isCompleted
       );
       if (toComplete.length === 0) return;
+       playSound('add');
       const batch = writeBatch(db);
       toComplete.forEach((todo) =>
         batch.update(doc(db, 'todos', todo.id), { isCompleted: true })
@@ -197,7 +200,7 @@ export function useTodos({ user, t, playSound }) {
       batch.commit();
       toast.success(t.updateSuccess);
     },
-    [t, todos]
+    [playSound, t, todos]
   );
 
   const deleteSelected = useCallback(

@@ -54,7 +54,9 @@ function Todo({
 
             if (isNaN(d.getTime())) return "";
 
-            const locale = lang === 'tr' ? 'tr-TR' : 'en-US';
+            let locale = 'en-US';
+            if (lang === 'tr') locale = 'tr-TR';
+            else if (lang === 'fr') locale = 'fr-FR';
 
             return d.toLocaleString(locale, {
                 year: 'numeric',   // 1. KONTROL: Yıl bilgisini ekledik
@@ -62,7 +64,7 @@ function Todo({
                 month: 'short',
                 hour: '2-digit',
                 minute: '2-digit',
-                hour12: lang !== 'tr'
+                hour12: lang === 'en'
             });
         } catch (error) {
             return "";
