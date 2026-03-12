@@ -58,14 +58,22 @@ function Todo({
             if (lang === 'tr') locale = 'tr-TR';
             else if (lang === 'fr') locale = 'fr-FR';
 
-            return d.toLocaleString(locale, {
-                year: 'numeric',   // 1. KONTROL: Yıl bilgisini ekledik
+            const formatted = d.toLocaleString(locale, {
+                year: 'numeric',
                 day: '2-digit',
                 month: 'short',
                 hour: '2-digit',
                 minute: '2-digit',
                 hour12: lang === 'en'
             });
+
+            // Fransızcada ay isimleri varsayılan olarak küçük geliyor.
+            // Sadece görsel bütünlük için ilk harfi büyütüyoruz.
+            if (lang === 'fr' && formatted.length > 0) {
+                return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+            }
+
+            return formatted;
         } catch (error) {
             return "";
         }

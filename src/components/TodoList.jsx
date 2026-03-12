@@ -27,16 +27,12 @@ function TodoList({
     <div className="todo-list-container" style={{ width: "100%", marginTop: "20px" }}>
       {todos && todos.length > 0 ? (
         <SortableContext items={todos.map(item => item.id)} strategy={verticalListSortingStrategy}>
-          <AnimatePresence mode='sync'>
+          <AnimatePresence initial={false}>
             {todos.map((todoItem) => (
               <motion.div
                 key={todoItem.id}
-                layout="position"
                 initial={false}
-                exit={{ opacity: 0, scale: 0.95, y: 10, transition: { duration: 0.15 } }}
-                transition={{
-                  layout: { duration: 0.18, ease: 'easeOut' }
-                }}
+                exit={{ opacity: 0, y: 10, transition: { duration: 0.12 } }}
               >
                 <Todo
                   todo={todoItem}

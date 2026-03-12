@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 import AuthChoiceCard from './AuthChoiceCard';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const TodoCreate = lazy(() => import('./TodoCreate'));
 const TodoList = lazy(() => import('./TodoList'));
@@ -63,9 +64,19 @@ function AuthSection({
       {filter !== 'archive' && (
         <>
           <TodoCreate onCreateTodo={onAddTodo} t={t} playSound={playSound} />
-          {activeTodosOnly.length > 0 && (
-            <ProgressBar percentage={progressPercentage} t={t} />
-          )}
+          <AnimatePresence initial={false}>
+            {activeTodosOnly.length > 0 && (
+              <motion.div
+                key="progress-bar"
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.25, ease: 'easeOut' }}
+              >
+                <ProgressBar percentage={progressPercentage} t={t} />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </>
       )}
 
