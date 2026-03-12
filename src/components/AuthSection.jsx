@@ -25,6 +25,7 @@ function AuthSection({
   onToggleSelect,
   onArchiveSelected,
   onDeleteSelected,
+  onSelectAll,
   sensors,
   onDragEnd,
   todos,
@@ -78,6 +79,7 @@ function AuthSection({
         onToggleSelectionMode={onToggleSelectionMode}
         onArchiveSelected={onArchiveSelected}
         onDeleteSelected={onDeleteSelected}
+        onSelectAll={onSelectAll}
       />
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>

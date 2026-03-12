@@ -55,9 +55,10 @@ export const translations = {
         confirmSelectedDelete: "Seçili hedefleri silmek istediğinize emin misiniz? 🗑️",
         selectionMode: "Seçim Modu",
         selectionModeOff: "Seçim Modunu Kapat",
-        archiveSelected: "Seçilileri Arşivle",
-        deleteSelected: "Seçilileri Sil",
-        selectedLabel: "Seçili:"
+        archiveSelected: "Seçilenleri Arşivle",
+        deleteSelected: "Seçilenleri Sil",
+        selectedLabel: "Seçilenler:",
+        selectAll: "Tümünü Seç"
     },
     en: {
         header: "To-Do Lıst",
@@ -117,6 +118,7 @@ export const translations = {
         selectionModeOff: "Exit Selection Mode",
         archiveSelected: "Archive Selected",
         deleteSelected: "Delete Selected",
-        selectedLabel: "Selected:"
+        selectedLabel: "Selected:",
+        selectAll: "Select All"
     }
 };

@@ -447,6 +447,26 @@ body {
     text-align: right;
 }
 
+.selection-all-container {
+    margin-top: 2px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.selection-all-btn {
+    background: transparent;
+    border: none;
+    color: var(--primary-color);
+    font-size: 11px;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: underline;
+}
+
+.dark .selection-all-btn {
+    color: #dfe6ff;
+}
+
 /* =========================================
    6. TODO LİSTESİ VE ÖĞELER
    ========================================= */

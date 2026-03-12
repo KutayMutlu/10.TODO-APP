@@ -14,6 +14,7 @@ function TodoFilter({
   onToggleSelectionMode,
   onArchiveSelected,
   onDeleteSelected,
+  onSelectAll,
 }) {
     // 1. KONTROL: Arşiv sekmesi ana filtre listesine eklendi
     const filters = [
@@ -113,9 +114,20 @@ function TodoFilter({
             )}
 
             {selectionMode && currentFilter !== 'archive' && (
-                <div className="selection-info">
-                    <span>{t.selectedLabel} {selectedCount}</span>
-                </div>
+                <>
+                    <div className="selection-info">
+                        <span>{t.selectedLabel} {selectedCount}</span>
+                    </div>
+                    <div className="selection-all-container">
+                        <button
+                            type="button"
+                            className="selection-all-btn"
+                            onClick={onSelectAll}
+                        >
+                            {t.selectAll}
+                        </button>
+                    </div>
+                </>
             )}
         </div>
     );

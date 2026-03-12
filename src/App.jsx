@@ -211,6 +211,13 @@ function App() {
     [filteredTodos]
   );
 
+  const handleSelectAllVisible = () => {
+    const ids = filteredTodos
+      .filter((todo) => !todo.isArchived)
+      .map((todo) => todo.id);
+    setSelectedIds(ids);
+  };
+
   // Uygulama ilk açılırken (Firebase auth durumu henüz belli değilken) tam ekran, smooth bir yükleme ekranı göster
   if (!initialAuthChecked) {
     return <LoadingScreen text={t.loading} />;
@@ -255,6 +262,7 @@ function App() {
           onToggleSelect={handleToggleSelect}
           onArchiveSelected={handleArchiveSelected}
           onDeleteSelected={handleDeleteSelected}
+          onSelectAll={handleSelectAllVisible}
           sensors={sensors}
           onDragEnd={handleDragEnd}
           todos={sortedTodos}
