@@ -13,6 +13,7 @@ function TodoFilter({
   selectedCount,
   onToggleSelectionMode,
   onArchiveSelected,
+  onCompleteSelected,
   onDeleteSelected,
   onSelectAll,
 }) {
@@ -65,6 +66,17 @@ function TodoFilter({
                             >
                                 <HiOutlineCheckCircle size={20} />
                                 <span>{t.archiveSelected}</span>
+                            </motion.button>
+
+                            <motion.button
+                                whileHover={{ scale: selectedCount ? 1.02 : 1 }}
+                                whileTap={{ scale: selectedCount ? 0.98 : 1 }}
+                                onClick={onCompleteSelected}
+                                className="bulk-btn complete-selected"
+                                disabled={selectedCount === 0}
+                            >
+                                <HiOutlineCheckCircle size={20} />
+                                <span>{t.completeSelected}</span>
                             </motion.button>
 
                             <motion.button

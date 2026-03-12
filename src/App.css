@@ -415,6 +415,11 @@ body {
     color: var(--error-color);
 }
 
+.complete-selected {
+    background: rgba(52, 152, 219, 0.12);
+    color: #2980b9;
+}
+
 .selection-toggle {
     background: rgba(108, 99, 255, 0.05);
     color: var(--primary-color);

@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { initializeFirestore } from "firebase/firestore"; // Değişiklik burada
+import { initializeFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
     apiKey: "AIzaSyCK1aq2GaPA2X7rEBSWRgk9IbXmWJn66Dw",
@@ -13,11 +13,24 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-// Wi-Fi takılmalarını önleyen kritik yapılandırma
-export const db = initializeFirestore(app, {
-    experimentalForceLongPolling: true, // WebSocket yerine standart HTTP kullanır
-    useFetchStreams: false,            // Bazı tarayıcılarda hız artışı sağlar
-});
+// Sadece belirli tarayıcılarda (özellikle iOS Safari) long polling kullan,
+// diğerlerinde varsayılan (daha hızlı) bağlantıyı bırak.
+let firestoreSettings = {};
+
+if (typeof navigator !== "undefined") {
+    const ua = navigator.userAgent || "";
+    const isIOS = /iPhone|iPad|iPod/.test(ua);
+    const isSafari = /Safari/.test(ua) && !/Chrome/.test(ua);
+
+    if (isIOS && isSafari) {
+        firestoreSettings = {
+            experimentalForceLongPolling: true,
+            useFetchStreams: false,
+        };
+    }
+}
+
+export const db = initializeFirestore(app, firestoreSettings);
 
 export const auth = getAuth(app);
 export const provider = new GoogleAuthProvider();

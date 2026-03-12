@@ -54,6 +54,7 @@ function SystemControls({
                 <select className="lang-select" value={lang} onChange={(e) => setLang(e.target.value)}>
                   <option value="tr">Türkçe 🇹🇷</option>
                   <option value="en">English 🇺🇸</option>
+                  <option value="fr">Français 🇫🇷</option>
                 </select>
               </div>
               <div className="setting-item">

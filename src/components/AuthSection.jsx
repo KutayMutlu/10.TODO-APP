@@ -24,6 +24,7 @@ function AuthSection({
   onToggleSelectionMode,
   onToggleSelect,
   onArchiveSelected,
+  onCompleteSelected,
   onDeleteSelected,
   onSelectAll,
   sensors,
@@ -78,6 +79,7 @@ function AuthSection({
         selectedCount={selectedIds?.length || 0}
         onToggleSelectionMode={onToggleSelectionMode}
         onArchiveSelected={onArchiveSelected}
+        onCompleteSelected={onCompleteSelected}
         onDeleteSelected={onDeleteSelected}
         onSelectAll={onSelectAll}
       />

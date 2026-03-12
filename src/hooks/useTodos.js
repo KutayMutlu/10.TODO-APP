@@ -184,6 +184,22 @@ export function useTodos({ user, t, playSound }) {
     [t, todos]
   );
 
+  const completeSelected = useCallback(
+    (ids) => {
+      const toComplete = todos.filter(
+        (todo) => ids.includes(todo.id) && !todo.isArchived && !todo.isCompleted
+      );
+      if (toComplete.length === 0) return;
+      const batch = writeBatch(db);
+      toComplete.forEach((todo) =>
+        batch.update(doc(db, 'todos', todo.id), { isCompleted: true })
+      );
+      batch.commit();
+      toast.success(t.updateSuccess);
+    },
+    [t, todos]
+  );
+
   const deleteSelected = useCallback(
     (ids) => {
       const toDelete = todos.filter((todo) => ids.includes(todo.id));
@@ -219,6 +235,7 @@ export function useTodos({ user, t, playSound }) {
     clearAllTodos,
     clearCompletedTodos,
     archiveSelected,
+    completeSelected,
     deleteSelected,
     activeTodosOnly,
     progressPercentage,

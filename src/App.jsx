@@ -16,7 +16,14 @@ import { arrayMove } from '@dnd-kit/sortable';
 
 function App() {
   // --- STATE TANIMLAMALARI ---
-  const [lang, setLang] = useState(() => localStorage.getItem("lang") || (navigator.language.startsWith('tr') ? 'tr' : 'en'));
+  const [lang, setLang] = useState(() => {
+    const stored = localStorage.getItem("lang");
+    if (stored) return stored;
+    const navLang = navigator.language || navigator.userLanguage || 'en';
+    if (navLang.toLowerCase().startsWith('tr')) return 'tr';
+    if (navLang.toLowerCase().startsWith('fr')) return 'fr';
+    return 'en';
+  });
   const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "light");
   const [filter, setFilter] = useState("all");
   const [showSettings, setShowSettings] = useState(false);
@@ -92,6 +99,7 @@ function App() {
     clearAllTodos,
     clearCompletedTodos,
     archiveSelected,
+    completeSelected,
     deleteSelected,
     activeTodosOnly,
     progressPercentage,
@@ -197,6 +205,18 @@ function App() {
     });
   };
 
+  const handleCompleteSelected = () => {
+    if (selectedIds.length === 0) return;
+    const toComplete = selectedIds.filter((id) => {
+      const todo = todos.find((t) => t.id === id);
+      return todo && !todo.isArchived && !todo.isCompleted;
+    });
+    if (toComplete.length === 0) return;
+    completeSelected(toComplete);
+    setSelectedIds([]);
+    setSelectionMode(false);
+  };
+
   const filteredTodos = useMemo(() => {
     if (filter === "archive") return todos.filter(todo => todo.isArchived);
     if (filter === "active") return todos.filter(todo => !todo.isArchived && !todo.isCompleted);
@@ -261,6 +281,7 @@ function App() {
           onToggleSelectionMode={handleToggleSelectionMode}
           onToggleSelect={handleToggleSelect}
           onArchiveSelected={handleArchiveSelected}
+          onCompleteSelected={handleCompleteSelected}
           onDeleteSelected={handleDeleteSelected}
           onSelectAll={handleSelectAllVisible}
           sensors={sensors}
