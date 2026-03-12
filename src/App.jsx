@@ -123,6 +123,11 @@ function App() {
     }
   };
 
+  const handleLogoutWithTodos = () => {
+    setShowSettings(false);
+    handleLogout(todos);
+  };
+
   const handleClearAllTodos = () => {
     if (todos.length === 0) return;
     Swal.fire({
@@ -171,7 +176,7 @@ function App() {
         isSoundEnabled={isSoundEnabled}
         setIsSoundEnabled={setIsSoundEnabled}
         handleUpgradeAccount={handleUpgradeAccount}
-        handleLogout={handleLogout}
+        handleLogout={handleLogoutWithTodos}
       />
 
       <h1 className='todo-header'>{filter === "archive" ? t.archive : t.header}</h1>
