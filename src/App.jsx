@@ -3,7 +3,7 @@ import './App.css'
 import TodoCreate from './components/TodoCreate'
 import TodoList from './components/TodoList'
 import { ToastContainer, toast } from 'react-toastify';
-import { FaSun, FaMoon, FaSignOutAlt, FaGoogle } from "react-icons/fa";
+import { FaSun, FaMoon, FaSignOutAlt, FaGoogle, FaPlus, FaTrash } from "react-icons/fa";
 import { IoMdSettings } from "react-icons/io";
 import { motion, AnimatePresence } from 'framer-motion';
 import "react-toastify/dist/ReactToastify.css";
@@ -114,6 +114,8 @@ function App() {
     }, (error) => { console.error("Firestore Hatası:", error); });
     return () => unsubscribe();
   }, [user]);
+
+
 
   // --- LOCAL STORAGE & TEMA ---
   useEffect(() => { localStorage.setItem("lang", lang); }, [lang]);

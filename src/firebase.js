@@ -1,10 +1,9 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { initializeFirestore } from "firebase/firestore"; // Değişiklik burada
 
-// Firebase Console > Project Settings > General kısmındaki bilgileri buraya yapıştır
 const firebaseConfig = {
-    apiKey: "AIzaSyCK1aq2GaPA2X7rEBSWRgk9IbXmWJn66Dw", // Burayı kendi anahtarınla doldur
+    apiKey: "AIzaSyCK1aq2GaPA2X7rEBSWRgk9IbXmWJn66Dw",
     authDomain: "to-do-app-km.firebaseapp.com",
     projectId: "to-do-app-km",
     storageBucket: "to-do-app-km.appspot.com",
@@ -13,6 +12,12 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+
+// Wi-Fi takılmalarını önleyen kritik yapılandırma
+export const db = initializeFirestore(app, {
+    experimentalForceLongPolling: true, // WebSocket yerine standart HTTP kullanır
+    useFetchStreams: false,            // Bazı tarayıcılarda hız artışı sağlar
+});
+
 export const auth = getAuth(app);
 export const provider = new GoogleAuthProvider();
-export const db = getFirestore(app);
