@@ -88,7 +88,7 @@ function App() {
     // Redirect sonucunu sessizce arka planda hallet
     getRedirectResult(auth).then((res) => {
       if (isMounted && res?.user) {
-        toast.success(lang === 'tr' ? "Giriş başarılı!" : "Login successful!");
+        toast.success(t.authSuccess);
       }
     }).catch(console.error);
 
@@ -137,7 +137,7 @@ function App() {
     try {
       const result = await signInWithPopup(auth, provider);
       if (result.user) setUser(result.user);
-    } catch (error) { toast.error("Giriş başarısız!"); }
+    } catch (error) { toast.error(t.loginError); }
   };
 
   const handleGuestLogin = async () => {
@@ -148,13 +148,13 @@ function App() {
       if (!currentUser) {
         const result = await signInAnonymously(auth);
         currentUser = result.user;
-        toast.info(lang === 'tr' ? "Misafir oturumu açıldı." : "Guest session started.");
+        toast.info(t.guestStarted);
       } else {
-        toast.info(lang === 'tr' ? "Eski oturumunuz yüklendi." : "Previous session restored.");
+        toast.info(t.guestRestored);
       }
       setUser(currentUser);
       setTimeout(() => {
-        toast.warning(lang === 'tr' ? "Hedeflerinizin kaybolmaması için lütfen bir hesap bağlayın." : "Please link an account to prevent data loss.", { autoClose: 5000, position: "top-center", className: 'wide-toast' });
+        toast.warning(t.guestUpgradeWarning, { autoClose: 5000, position: "top-center", className: 'wide-toast' });
       }, 500);
     } finally { setAuthLoading(false); }
   };
@@ -173,10 +173,10 @@ function App() {
         isAnonymous: false
       });
       setShowSettings(false);
-      toast.success(lang === 'tr' ? "Hesabınız bağlandı!" : "Account linked!");
+      toast.success(t.accountLinked);
     } catch (error) {
       if (error.code === 'auth/credential-already-in-use') {
-        Swal.fire({ title: lang === 'tr' ? 'Hesap Zaten Var' : 'Account Already Exists', text: lang === 'tr' ? "Bu Google hesabı zaten başka bir kullanıcıya bağlı." : "This account is already linked.", icon: 'warning' });
+        Swal.fire({ title: t.accountExistsTitle, text: t.accountExistsText, icon: 'warning' });
       }
     } finally { setAuthLoading(false); }
   };
@@ -187,16 +187,16 @@ function App() {
     if (!user.isAnonymous) {
       await signOut(auth);
       setUser(null);
-      toast.info(lang === 'tr' ? "Çıkış yapıldı." : "Logged out.");
+      toast.info(t.loggedOut);
       return;
     }
     Swal.fire({
-      title: lang === 'tr' ? 'Oturumu Kapat' : 'Logout',
-      text: lang === 'tr' ? "Verileriniz silinsin mi?" : "Delete data?",
+      title: t.logoutTitle,
+      text: t.logoutQuestion,
       icon: 'question',
       showCancelButton: true,
-      confirmButtonText: lang === 'tr' ? 'Hepsini Sil' : 'Delete All',
-      cancelButtonText: lang === 'tr' ? 'Verilerimi Sakla' : 'Keep My Data',
+      confirmButtonText: t.logoutConfirmDelete,
+      cancelButtonText: t.logoutCancelKeep,
       confirmButtonColor: '#d33',
       cancelButtonColor: '#6c63ff',
     }).then(async (swalResult) => {
@@ -207,11 +207,11 @@ function App() {
           await batch.commit();
           await signOut(auth);
           setUser(null);
-          toast.error(lang === 'tr' ? "Veriler temizlendi." : "Data cleared.");
+          toast.error(t.dataCleared);
         } catch (e) { console.error(e); }
       } else if (swalResult.dismiss === Swal.DismissReason.cancel) {
         setUser(null);
-        toast.info(lang === 'tr' ? "Verileriniz saklandı." : "Data saved.");
+        toast.info(t.dataSaved);
       }
     });
   };
@@ -267,7 +267,7 @@ function App() {
       title: t.confirmAllDelete,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: lang === 'tr' ? 'Evet, sil!' : 'Yes, delete!',
+      confirmButtonText: t.confirmDeleteYes,
     }).then(async (result) => {
       if (result.isConfirmed) {
         const batch = writeBatch(db);
@@ -284,7 +284,7 @@ function App() {
     const batch = writeBatch(db);
     completedOnes.forEach(todo => batch.update(doc(db, "todos", todo.id), { isArchived: true }));
     batch.commit();
-    toast.info(lang === 'tr' ? "Tamamlananlar arşivlendi." : "Completed archived.");
+    toast.info(t.archiveCompletedInfo);
   };
 
   const sensors = useSensors(
@@ -340,7 +340,7 @@ function App() {
   }, [activeTodosOnly]);
 
   // Sadece henüz kullanıcı bilgisi alınmamışken tam ekran yükleme göster
-  if (authLoading && !user) return <div className="loading-screen">Lütfen bekleyin...</div>;
+  if (authLoading && !user) return <div className="loading-screen">{t.loading}</div>;
 
   return (
     <div className='App'>
@@ -360,12 +360,13 @@ function App() {
         handleLogout={handleLogout}
       />
 
-      <h1 className='todo-header'>{filter === "archive" ? (lang === 'tr' ? "Arşiv" : "Archive") : t.header}</h1>
+      <h1 className='todo-header'>{filter === "archive" ? t.archive : t.header}</h1>
 
       <div className='main'>
         {!user ? (
           <AuthChoiceCard
             lang={lang}
+            t={t}
             onLogin={handleLogin}
             onGuestLogin={handleGuestLogin}
           />

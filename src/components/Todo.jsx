@@ -26,8 +26,6 @@ function Todo({ todo, onRemoveTodo, onUpdateTodo, onToggleComplete, t, lang, pla
         transition: isDragging ? 'none' : (transition || 'transform 200ms ease'),
         zIndex: isDragging ? 999 : 1,
         opacity: isDragging ? 0.6 : (isArchived ? 0.7 : 1),
-        // Allow vertical scrolling on touch devices; drag is initiated only from handle
-        touchAction: 'pan-y',
         willChange: 'transform'
     };
 
@@ -103,7 +101,12 @@ function Todo({ todo, onRemoveTodo, onUpdateTodo, onToggleComplete, t, lang, pla
     return (
         <div ref={setNodeRef} style={style} className={`todo-row-container ${isShaking ? 'shake' : ''}`}>
 
-            <div className="drag-handle" {...attributes} {...listeners}>
+            <div
+                className="drag-handle"
+                style={{ touchAction: 'none', cursor: 'grab' }}
+                {...attributes}
+                {...listeners}
+            >
                 <MdDragIndicator style={{ fontSize: '24px', opacity: isArchived ? 0.3 : 0.6 }} />
             </div>
 
@@ -115,7 +118,7 @@ function Todo({ todo, onRemoveTodo, onUpdateTodo, onToggleComplete, t, lang, pla
                     <MdSettingsBackupRestore
                         className='todo-icons icon-restore'
                         style={{ color: '#7d5fff', fontSize: '32px', cursor: 'pointer' }}
-                        title={t?.archiveTitle || "Restore"}
+                        title={t?.archiveTitle}
                     />
                 ) : (
                     <RiCheckboxLine

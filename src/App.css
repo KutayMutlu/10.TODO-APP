@@ -714,6 +714,16 @@ body {
     cursor: grabbing;
 }
 
+.drag-handle {
+    touch-action: none;
+    cursor: grab;
+    color: var(--icon-default);
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
 /* iPhone'da metin seçilmesini engelleyerek kaydırmayı kolaylaştırır */
 .todo-list-container {
     user-select: none;

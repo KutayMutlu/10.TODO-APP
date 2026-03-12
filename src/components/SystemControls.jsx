@@ -50,7 +50,7 @@ function SystemControls({
               className="settings-menu"
             >
               <div className="setting-item">
-                <span>Language</span>
+                <span>{t.languageLabel}</span>
                 <select className="lang-select" value={lang} onChange={(e) => setLang(e.target.value)}>
                   <option value="tr">Türkçe 🇹🇷</option>
                   <option value="en">English 🇺🇸</option>
@@ -70,12 +70,12 @@ function SystemControls({
                 <>
                   {user.isAnonymous && (
                     <div className="setting-item action" onClick={handleUpgradeAccount}>
-                      <span>{lang === 'tr' ? "Hesabı Google'a Bağla" : 'Link to Google'}</span>
+                      <span>{t.linkGoogle}</span>
                       <FaGoogle className="icon-blue" />
                     </div>
                   )}
                   <div className="setting-item action logout" onClick={handleLogout}>
-                    <span>{lang === 'tr' ? 'Oturumu Kapat' : 'Logout'}</span>
+                    <span>{t.logout}</span>
                     <FaSignOutAlt />
                   </div>
                 </>

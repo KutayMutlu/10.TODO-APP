@@ -60,7 +60,7 @@ function TodoFilter({ currentFilter, onFilterChange, t, onClearAll, onClearCompl
             {currentFilter === 'archive' && (
                 <div className="bulk-actions">
                     <p className="archive-info-text" style={{ fontSize: '0.8rem', opacity: 0.7, padding: '10px' }}>
-                        {t.archiveTitle || "Arşivlenmiş hedefler burada saklanır."}
+                        {t.archiveTitle}
                     </p>
                 </div>
             )}

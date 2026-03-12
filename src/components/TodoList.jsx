@@ -58,10 +58,7 @@ function TodoList({ todos, onRemoveTodo, onUpdateTodo, onToggleComplete, t, lang
             )}
 
             <p className="empty-state-text" style={{ marginTop: '10px' }}>
-              {/* 4. KONTROL: lang değişkeni artık burada güvenle kullanılabiliyor */}
-              {isArchiveView
-                ? (lang === 'tr' ? "Arşiviniz şu an boş. 📭" : "Archive is empty. 📭")
-                : t?.noTodos}
+              {isArchiveView ? t.archiveEmpty : t?.noTodos}
             </p>
           </motion.div>
         </AnimatePresence>
