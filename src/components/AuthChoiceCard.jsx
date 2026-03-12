@@ -17,13 +17,8 @@ function AuthChoiceCard({ lang, t, onLogin, onGuestLogin, authLoading }) {
             <button
               className="login-icon-btn guest"
               onClick={onGuestLogin}
-              disabled={authLoading}
             >
-              {authLoading ? (
-                <span className="guest-loading-text">{t.loading}</span>
-              ) : (
-                <div className="guest-icon-placeholder">👤</div>
-              )}
+              <div className="guest-icon-placeholder">👤</div>
             </button>
             <span>{t.guest}</span>
           </div>

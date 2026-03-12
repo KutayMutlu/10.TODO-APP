@@ -340,8 +340,15 @@ function App() {
     return (completedCount / activeTodosOnly.length) * 100;
   }, [activeTodosOnly]);
 
-  // Uygulama ilk açılırken (Firebase auth durumu henüz belli değilken) tam ekran yükleme göster
-  if (!initialAuthChecked) return <div className="loading-screen">{t.loading}</div>;
+  // Uygulama ilk açılırken (Firebase auth durumu henüz belli değilken) tam ekran, smooth bir yükleme ekranı göster
+  if (!initialAuthChecked) {
+    return (
+      <div className="app-loading-screen">
+        <div className="app-loading-spinner" />
+        <div className="app-loading-text">{t.loading}</div>
+      </div>
+    );
+  }
 
   return (
     <div className='App'>
@@ -365,13 +372,21 @@ function App() {
 
       <div className='main'>
         {!user ? (
-          <AuthChoiceCard
-            lang={lang}
-            t={t}
-            onLogin={handleLogin}
-            onGuestLogin={handleGuestLogin}
-            authLoading={authLoading}
-          />
+          <>
+            <AuthChoiceCard
+              lang={lang}
+              t={t}
+              onLogin={handleLogin}
+              onGuestLogin={handleGuestLogin}
+              authLoading={authLoading}
+            />
+            {authLoading && (
+              <div className="auth-loading-inline">
+                <div className="auth-loading-spinner" />
+                <span className="auth-loading-text">{t.loading}</span>
+              </div>
+            )}
+          </>
         ) : (
           <>
             <Suspense fallback={null}>
