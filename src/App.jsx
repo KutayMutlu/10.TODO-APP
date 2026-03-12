@@ -173,6 +173,7 @@ function App() {
     }
     archiveSelected(archivable);
     setSelectedIds([]);
+    setSelectionMode(false);
   };
 
   const handleDeleteSelected = () => {
@@ -191,6 +192,7 @@ function App() {
         if (deletable.length === 0) return;
         deleteSelected(deletable);
         setSelectedIds([]);
+        setSelectionMode(false);
       }
     });
   };
