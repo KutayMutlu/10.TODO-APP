@@ -107,6 +107,7 @@ function Todo({
             content: newTodo.trim() // Boşlukları temizleyerek kaydet
         };
 
+        playSound("add");
         onUpdateTodo(updatedTodo);
         setEditable(false);
     }
