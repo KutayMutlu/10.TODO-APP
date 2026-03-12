@@ -24,6 +24,8 @@ function App() {
     const savedSound = localStorage.getItem("soundEnabled");
     return savedSound !== null ? JSON.parse(savedSound) : true;
   });
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState([]);
 
   const t = translations[lang];
 
@@ -89,6 +91,8 @@ function App() {
     toggleCompleteTodo,
     clearAllTodos,
     clearCompletedTodos,
+    archiveSelected,
+    deleteSelected,
     activeTodosOnly,
     progressPercentage,
   } = useTodos({
@@ -138,6 +142,42 @@ function App() {
     }).then((result) => {
       if (result.isConfirmed) {
         clearAllTodos();
+      }
+    });
+  };
+
+  const handleToggleSelectionMode = () => {
+    setSelectionMode((prev) => {
+      if (prev) {
+        setSelectedIds([]);
+      }
+      return !prev;
+    });
+  };
+
+  const handleToggleSelect = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const handleArchiveSelected = () => {
+    if (selectedIds.length === 0) return;
+    archiveSelected(selectedIds);
+    setSelectedIds([]);
+  };
+
+  const handleDeleteSelected = () => {
+    if (selectedIds.length === 0) return;
+    Swal.fire({
+      title: t.confirmSelectedDelete,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: t.confirmDeleteYes,
+    }).then((result) => {
+      if (result.isConfirmed) {
+        deleteSelected(selectedIds);
+        setSelectedIds([]);
       }
     });
   };
@@ -194,6 +234,10 @@ function App() {
           onFilterChange={setFilter}
           onClearAll={handleClearAllTodos}
           onClearCompleted={clearCompletedTodos}
+          selectionMode={selectionMode}
+          selectedIds={selectedIds}
+          onToggleSelectionMode={handleToggleSelectionMode}
+          onToggleSelect={handleToggleSelect}
           sensors={sensors}
           onDragEnd={handleDragEnd}
           todos={sortedTodos}

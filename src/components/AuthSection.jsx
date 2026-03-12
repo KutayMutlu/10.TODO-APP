@@ -19,6 +19,10 @@ function AuthSection({
   onFilterChange,
   onClearAll,
   onClearCompleted,
+   selectionMode,
+   selectedIds,
+   onToggleSelectionMode,
+   onToggleSelect,
   sensors,
   onDragEnd,
   todos,
@@ -67,6 +71,11 @@ function AuthSection({
         t={t}
         onClearAll={onClearAll}
         onClearCompleted={onClearCompleted}
+        selectionMode={selectionMode}
+        selectedCount={selectedIds?.length || 0}
+        onToggleSelectionMode={onToggleSelectionMode}
+        onArchiveSelected={onClearCompleted}
+        onDeleteSelected={onClearAll}
       />
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
@@ -79,6 +88,9 @@ function AuthSection({
           t={t}
           lang={lang}
           playSound={playSound}
+          selectionMode={selectionMode}
+          selectedIds={selectedIds}
+          onToggleSelect={onToggleSelect}
         />
       </DndContext>
     </Suspense>

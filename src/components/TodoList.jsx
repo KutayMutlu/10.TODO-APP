@@ -6,7 +6,19 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { motion, AnimatePresence } from 'framer-motion';
 
 // 1. KONTROL: 'lang' parametresi buraya eklendi (Hatanın çözümü burası)
-function TodoList({ todos, onRemoveTodo, onUpdateTodo, onToggleComplete, t, lang, playSound, isSoundEnabled }) {
+function TodoList({
+  todos,
+  onRemoveTodo,
+  onUpdateTodo,
+  onToggleComplete,
+  t,
+  lang,
+  playSound,
+  isSoundEnabled,
+  selectionMode,
+  selectedIds,
+  onToggleSelect,
+}) {
 
   // 2. KONTROL: Liste boşken hata vermemesi için güvenli kontrol
   const isArchiveView = todos && todos.length > 0 && todos[0].isArchived;
@@ -37,6 +49,9 @@ function TodoList({ todos, onRemoveTodo, onUpdateTodo, onToggleComplete, t, lang
                   t={t}
                   // 3. KONTROL: Todo bileşenine dil bilgisini aktarıyoruz
                   lang={lang}
+                  selectionMode={selectionMode}
+                  isSelected={selectedIds?.includes(todoItem.id)}
+                  onToggleSelect={onToggleSelect}
                 />
               </motion.div>
             ))}

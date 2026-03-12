@@ -10,7 +10,19 @@ import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
 
 // 1. KONTROL: 'lang' prop'unu doğrudan alıyoruz ki dil değişince tarih anında tetiklensin
-function Todo({ todo, onRemoveTodo, onUpdateTodo, onToggleComplete, t, lang, playSound, isSoundEnabled }) {
+function Todo({
+  todo,
+  onRemoveTodo,
+  onUpdateTodo,
+  onToggleComplete,
+  t,
+  lang,
+  playSound,
+  isSoundEnabled,
+  selectionMode,
+  isSelected,
+  onToggleSelect,
+}) {
     const { id, content, isCompleted, createdAt, isArchived, displayDate } = todo;
     const [editable, setEditable] = useState(false);
     const [newTodo, setNewTodo] = useState(content);
@@ -100,6 +112,22 @@ function Todo({ todo, onRemoveTodo, onUpdateTodo, onToggleComplete, t, lang, pla
 
     return (
         <div ref={setNodeRef} style={style} className={`todo-row-container ${isShaking ? 'shake' : ''}`}>
+
+            {selectionMode && (
+                <div
+                    className="todo-select-checkbox"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onToggleSelect && onToggleSelect(id);
+                    }}
+                >
+                    <input
+                        type="checkbox"
+                        checked={!!isSelected}
+                        readOnly
+                    />
+                </div>
+            )}
 
             <div
                 className="drag-handle"

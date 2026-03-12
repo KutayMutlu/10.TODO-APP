@@ -165,6 +165,35 @@ export function useTodos({ user, t, playSound }) {
     toast.info(t.archiveCompletedInfo);
   }, [t, todos]);
 
+  const archiveSelected = useCallback(
+    (ids) => {
+      const toArchive = todos.filter(
+        (todo) => ids.includes(todo.id) && !todo.isArchived
+      );
+      if (toArchive.length === 0) return;
+      const batch = writeBatch(db);
+      toArchive.forEach((todo) =>
+        batch.update(doc(db, 'todos', todo.id), { isArchived: true })
+      );
+      batch.commit();
+      toast.info(t.archiveCompletedInfo);
+    },
+    [t, todos]
+  );
+
+  const deleteSelected = useCallback(
+    (ids) => {
+      const toDelete = todos.filter((todo) => ids.includes(todo.id));
+      if (toDelete.length === 0) return;
+      playSound('delete');
+      const batch = writeBatch(db);
+      toDelete.forEach((todo) => batch.delete(doc(db, 'todos', todo.id)));
+      batch.commit();
+      toast.error(t.deleteSuccess);
+    },
+    [playSound, t, todos]
+  );
+
   const activeTodosOnly = useMemo(
     () => todos.filter((tItem) => !tItem.isArchived),
     [todos]
@@ -186,6 +215,8 @@ export function useTodos({ user, t, playSound }) {
     toggleCompleteTodo,
     clearAllTodos,
     clearCompletedTodos,
+    archiveSelected,
+    deleteSelected,
     activeTodosOnly,
     progressPercentage,
   };

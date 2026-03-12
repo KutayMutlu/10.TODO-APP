@@ -50,7 +50,13 @@ export const translations = {
         dataCleared: "Veriler temizlendi.",
         dataSaved: "Verileriniz saklandı.",
         confirmDeleteYes: "Evet, sil!",
-        archiveCompletedInfo: "Tamamlananlar arşivlendi."
+        archiveCompletedInfo: "Tamamlananlar arşivlendi.",
+        confirmSelectedDelete: "Seçili hedefleri silmek istediğinize emin misiniz? 🗑️",
+        selectionMode: "Seçim Modu",
+        selectionModeOff: "Seçim Modunu Kapat",
+        archiveSelected: "Seçilileri Arşivle",
+        deleteSelected: "Seçilileri Sil",
+        selectedLabel: "Seçili:"
     },
     en: {
         header: "To-Do Lıst",
@@ -103,6 +109,12 @@ export const translations = {
         dataCleared: "Data cleared.",
         dataSaved: "Data saved.",
         confirmDeleteYes: "Yes, delete!",
-        archiveCompletedInfo: "Completed archived."
+        archiveCompletedInfo: "Completed archived.",
+        confirmSelectedDelete: "Are you sure you want to delete selected tasks? 🗑️",
+        selectionMode: "Selection Mode",
+        selectionModeOff: "Exit Selection Mode",
+        archiveSelected: "Archive Selected",
+        deleteSelected: "Delete Selected",
+        selectedLabel: "Selected:"
     }
 };

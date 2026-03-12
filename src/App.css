@@ -425,6 +425,18 @@ body {
     margin-top: 15px;
 }
 
+.todo-select-checkbox {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.todo-select-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
 .todo-lists {
     display: flex;
     justify-content: space-between;
