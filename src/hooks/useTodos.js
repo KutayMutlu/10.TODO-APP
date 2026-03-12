@@ -156,7 +156,10 @@ export function useTodos({ user, t, playSound }) {
     const completedOnes = todos.filter(
       (todo) => todo.isCompleted && !todo.isArchived
     );
-    if (completedOnes.length === 0) return;
+    if (completedOnes.length === 0) {
+      toast.warn(t.noArchivableSelected);
+      return;
+    }
     const batch = writeBatch(db);
     completedOnes.forEach((todo) =>
       batch.update(doc(db, 'todos', todo.id), { isArchived: true })
