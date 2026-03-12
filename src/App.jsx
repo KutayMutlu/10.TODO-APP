@@ -79,44 +79,26 @@ function App() {
   useEffect(() => {
     let isMounted = true;
 
-    // 1. KONTROL: iPhone 15 / Safari "Fail-Safe" Mekanizması
-    // Eğer Firebase 2.5 saniye içinde hiçbir yanıt (var veya yok) vermezse, 
-    // kullanıcıyı beyaz ekranda tutma, loading'i zorla kapat.
-    const authGuard = setTimeout(() => {
-      if (isMounted && authLoading) {
-        console.warn("Auth gecikmesi algılandı, uygulama girişe zorlanıyor...");
-        setAuthLoading(false);
-      }
-    }, 2500);
-
-    // 2. KONTROL: Redirect (Google Login) sonucunu arka planda yakala.
-    getRedirectResult(auth)
-      .then((result) => {
-        if (isMounted && result?.user) {
-          setUser(result.user);
-          toast.success(lang === 'tr' ? "Giriş başarılı!" : "Login successful!");
-        }
-      })
-      .catch((error) => {
-        if (isMounted) console.error("Redirect Hatası:", error);
-      });
-
-    // 3. KONTROL: Mevcut oturumu (Session) yakala.
+    // En hızlı yakalama: onAuthStateChanged
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (isMounted) {
-        clearTimeout(authGuard); // Firebase yanıt verirse zamanlayıcıyı iptal et.
         setUser(currentUser);
-        setAuthLoading(false); // Oturum kesinleştiği an loading biter.
+        setAuthLoading(false); // Kullanıcıyı gördüğün an (veya null ise) içeri al
       }
     });
 
-    // 4. KONTROL: Cleanup (Bellek sızıntısı koruması)
+    // Redirect sonucunu sessizce arka planda hallet
+    getRedirectResult(auth).then((res) => {
+      if (isMounted && res?.user) {
+        toast.success(lang === 'tr' ? "Giriş başarılı!" : "Login successful!");
+      }
+    }).catch(console.error);
+
     return () => {
       isMounted = false;
       unsubscribe();
-      clearTimeout(authGuard); // Component kapanırsa zamanlayıcıyı temizle.
     };
-  }, [lang]); // Dil değişiminde mesajların doğruluğu için 'lang' bağımlılığı şart. // Dil değiştiğinde mesajların doğru dilde çıkması için 'lang' bağımlılığı kalmalı.
+  }, [lang]);
 
   // --- VERİ TABANI (FIRESTORE) BAĞLANTISI ---
   useEffect(() => {
