@@ -921,11 +921,20 @@ body {
 .drag-handle {
     touch-action: none;
     cursor: grab;
-    color: var(--icon-default);
+    color: #6c63ff; /* light temada daha belirgin mor */
 }
 
 .drag-handle:active {
     cursor: grabbing;
+}
+
+/* Dark temada drag handle ve restore ikonu için daha canlı renkler */
+.dark .drag-handle {
+    color: #ffc857;
+}
+
+.dark .icon-restore {
+    color: #a29bff !important;
 }
 
 /* iPhone'da metin seçilmesini engelleyerek kaydırmayı kolaylaştırır */
