@@ -118,6 +118,7 @@ export function useTodos({ user, t, playSound }) {
             isArchived: false,
             isCompleted: false,
           });
+          toast.info(t.restoreInfo);
         } else {
           await updateDoc(doc(db, 'todos', id), {
             isCompleted: !todo.isCompleted,
@@ -128,7 +129,7 @@ export function useTodos({ user, t, playSound }) {
         // sessizce yut
       }
     },
-    [playSound, todos]
+    [playSound, t, todos]
   );
 
   const clearAllTodos = useCallback(() => {

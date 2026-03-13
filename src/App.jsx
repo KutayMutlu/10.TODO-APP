@@ -276,7 +276,14 @@ function App() {
           progressPercentage={progressPercentage}
         />
       </div>
-      <ToastContainer theme={theme === "dark" ? "dark" : "light"} limit={3} autoClose={2000} />
+      <ToastContainer
+        theme={theme === "dark" ? "dark" : "light"}
+        limit={3}
+        autoClose={2000}
+        closeOnClick
+        draggable
+        draggableDirection="x"
+      />
       <footer className="footer">
         <p>{t.footerText} <span className="footer-name">Kutay Mutlu</span></p>
       </footer>
