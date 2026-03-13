@@ -20,9 +20,19 @@ export function SettingsProvider({ children }) {
     return 'en';
   });
 
-  const [theme, setTheme] = useState(
-    () => localStorage.getItem('theme') || 'light'
-  );
+  const [theme, setTheme] = useState(() => {
+    const stored = localStorage.getItem('theme');
+    if (stored === 'light' || stored === 'dark') return stored;
+
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      const prefersDark = window.matchMedia(
+        '(prefers-color-scheme: dark)'
+      ).matches;
+      return prefersDark ? 'dark' : 'light';
+    }
+
+    return 'light';
+  });
 
   const [isSoundEnabled, setIsSoundEnabled] = useState(() => {
     const savedSound = localStorage.getItem('soundEnabled');
@@ -43,6 +53,22 @@ export function SettingsProvider({ children }) {
     }
     localStorage.setItem('theme', theme);
   }, [theme]);
+
+  // İsteğe bağlı: sistem teması değişirse (örn. telefonun genel teması değiştiğinde) otomatik güncelle
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = (event) => {
+      const stored = localStorage.getItem('theme');
+      // Kullanıcı manuel seçim yaptıysa sistem değişimine saygı duymama:
+      if (stored === 'light' || stored === 'dark') return;
+      setTheme(event.matches ? 'dark' : 'light');
+    };
+
+    media.addEventListener('change', handler);
+    return () => media.removeEventListener('change', handler);
+  }, [setTheme]);
 
   useEffect(() => {
     localStorage.setItem('soundEnabled', JSON.stringify(isSoundEnabled));
