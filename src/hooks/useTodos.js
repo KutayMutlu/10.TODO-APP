@@ -14,17 +14,7 @@ import {
   where,
 } from 'firebase/firestore';
 import { toast } from 'react-toastify';
-
-const formatFirebaseDate = (date) => {
-  if (!date) return '---';
-  try {
-    if (date.seconds) return new Date(date.seconds * 1000).toLocaleString();
-    const d = new Date(date);
-    return isNaN(d.getTime()) ? '---' : d.toLocaleString();
-  } catch (e) {
-    return '---';
-  }
-};
+import { formatFirebaseDate } from '../utils/date';
 
 export function useTodos({ user, t, playSound }) {
   const [todos, setTodos] = useState([]);

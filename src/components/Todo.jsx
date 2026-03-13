@@ -8,6 +8,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
+import { formatTodoDate } from '../utils/date';
 
 // 1. KONTROL: 'lang' prop'unu doğrudan alıyoruz ki dil değişince tarih anında tetiklensin
 function Todo({
@@ -23,7 +24,7 @@ function Todo({
   isSelected,
   onToggleSelect,
 }) {
-    const { id, content, isCompleted, createdAt, isArchived, displayDate } = todo;
+    const { id, content, isCompleted, createdAt, isArchived } = todo;
     const [editable, setEditable] = useState(false);
     const [newTodo, setNewTodo] = useState(content);
     const [isShaking, setIsShaking] = useState(false);
@@ -39,44 +40,6 @@ function Todo({
         zIndex: isDragging ? 999 : 1,
         opacity: isDragging ? 0.6 : (isArchived ? 0.7 : 1),
         willChange: 'transform'
-    };
-
-    // 2. KONTROL: Dil değişimine duyarlı Güvenli Formatter
-    const formatDate = (dateValue) => {
-        if (!dateValue) return "";
-        try {
-            let d;
-            if (dateValue && dateValue.seconds) {
-                d = new Date(dateValue.seconds * 1000);
-            } else {
-                d = new Date(dateValue);
-            }
-
-            if (isNaN(d.getTime())) return "";
-
-            let locale = 'en-US';
-            if (lang === 'tr') locale = 'tr-TR';
-            else if (lang === 'fr') locale = 'fr-FR';
-
-            const formatted = d.toLocaleString(locale, {
-                year: 'numeric',
-                day: '2-digit',
-                month: 'short',
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: lang === 'en'
-            });
-
-            // Fransızcada ay isimleri varsayılan olarak küçük geliyor.
-            // Sadece görsel bütünlük için ilk harfi büyütüyoruz.
-            if (lang === 'fr' && formatted.length > 0) {
-                return formatted.charAt(0).toUpperCase() + formatted.slice(1);
-            }
-
-            return formatted;
-        } catch (error) {
-            return "";
-        }
     };
 
     useEffect(() => {
@@ -200,7 +163,7 @@ function Todo({
                             {/* 5. KONTROL: displayDate yerine her zaman formatDate(createdAt) kullanıyoruz 
                                 ki dil değişince bu fonksiyon yeniden hesaplansın */}
                             <span className='date-css'>
-                                {formatDate(createdAt)}
+                                {formatTodoDate(createdAt, lang)}
                             </span>
                         </>
                     )}

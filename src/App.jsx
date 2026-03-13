@@ -1,40 +1,37 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
-import './App.css'
+import { useState, useEffect, useRef, useMemo } from 'react';
+import './App.css';
 import { ToastContainer, toast } from 'react-toastify';
 import Swal from 'sweetalert2';
-import "react-toastify/dist/ReactToastify.css";
-import { translations } from './constants';
+import 'react-toastify/dist/ReactToastify.css';
 import SystemControls from './components/SystemControls';
 import LoadingScreen from './components/LoadingScreen';
 import AuthSection from './components/AuthSection';
 import { useAuth } from './hooks/useAuth';
 import { useTodos } from './hooks/useTodos';
+import { useSettings } from './context/SettingsContext.jsx';
 
 // DND KIT
 import { KeyboardSensor, PointerSensor, useSensor, useSensors, TouchSensor } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 
 function App() {
-  // --- STATE TANIMLAMALARI ---
-  const [lang, setLang] = useState(() => {
-    const stored = localStorage.getItem("lang");
-    if (stored) return stored;
-    const navLang = navigator.language || navigator.userLanguage || 'en';
-    if (navLang.toLowerCase().startsWith('tr')) return 'tr';
-    if (navLang.toLowerCase().startsWith('fr')) return 'fr';
-    return 'en';
-  });
-  const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "light");
+  // --- SETTINGS CONTEXT ---
+  const {
+    lang,
+    setLang,
+    theme,
+    setTheme,
+    t,
+    isSoundEnabled,
+    setIsSoundEnabled,
+    playSound,
+  } = useSettings();
+
+  // --- LOCAL STATE (UYGULAMA ÖZEL) ---
   const [filter, setFilter] = useState("all");
   const [showSettings, setShowSettings] = useState(false);
-  const [isSoundEnabled, setIsSoundEnabled] = useState(() => {
-    const savedSound = localStorage.getItem("soundEnabled");
-    return savedSound !== null ? JSON.parse(savedSound) : true;
-  });
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
-
-  const t = translations[lang];
 
   // --- 1. KONTROL: SETTINGS REF TANIMLAMA ---
   const settingsRef = useRef(null);
@@ -57,23 +54,6 @@ function App() {
       document.removeEventListener("touchstart", handleClickOutside);
     };
   }, [showSettings]);
-
-  // --- LOCAL STORAGE & TEMA ---
-  useEffect(() => { localStorage.setItem("lang", lang); }, [lang]);
-  useEffect(() => {
-    theme === "dark" ? document.body.classList.add("dark") : document.body.classList.remove("dark");
-    localStorage.setItem("theme", theme);
-  }, [theme]);
-  useEffect(() => { localStorage.setItem("soundEnabled", JSON.stringify(isSoundEnabled)); }, [isSoundEnabled]);
-
-  const playSound = useCallback((soundName) => {
-    if (!isSoundEnabled) return;
-    try {
-      const audio = new Audio(`/sounds/${soundName}.mp3`);
-      audio.volume = 0.3;
-      audio.play().catch(() => { });
-    } catch (e) { }
-  }, [isSoundEnabled]);
 
   const {
     user,
