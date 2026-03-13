@@ -34,6 +34,10 @@
     transition: background 0.3s ease, color 0.3s ease;
 }
 
+html, body {
+    overflow-x: hidden;
+}
+
 body {
     background: var(--bg-gradient);
     min-height: 100vh;
@@ -318,11 +322,13 @@ body {
 .main {
     width: 100%;
     max-width: 550px;
+    min-width: 0;
+    box-sizing: border-box;
     background-color: var(--card-bg);
     padding: 25px;
     border-radius: 16px;
     box-shadow: 0 10px 30px var(--shadow);
-
+    overflow-x: hidden;
 }
 
 .todo-input {
@@ -414,6 +420,8 @@ body {
     flex-direction: column;
     gap: 15px;
     margin: 25px 0;
+    min-width: 0; /* flex child taşmasını önler */
+    overflow-x: hidden;
 }
 
 .filter-container {
@@ -446,6 +454,8 @@ body {
     display: flex;
     justify-content: space-between;
     gap: 10px;
+    flex-wrap: wrap;
+    min-width: 0;
 }
 
 .bulk-btn {
@@ -505,6 +515,8 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
+    flex-wrap: wrap;
+    min-width: 0;
 }
 
 .selection-all-btn {
@@ -526,6 +538,7 @@ body {
 
 .selection-info {
     flex: 1;
+    min-width: 0;
     text-align: center;
     font-size: 14px;
     opacity: 0.85;
@@ -638,8 +651,56 @@ body {
     }
 }
 
+/* Tablet: Seçim modu butonları taşmasın */
+@media (max-width: 768px) {
+    .filter-wrapper {
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    .bulk-actions {
+        gap: 8px;
+    }
+
+    .bulk-btn {
+        flex: 1 1 auto;
+        min-width: 0;
+        padding: 8px 6px;
+        font-size: 12px;
+    }
+
+    .bulk-btn span {
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
+
+    .selection-row {
+        width: 100%;
+    }
+
+    .selection-all-btn {
+        flex-shrink: 0;
+        font-size: 11px;
+        padding: 4px 8px;
+    }
+
+    .selection-info {
+        font-size: 12px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
 /* Mobil Uyumluluk */
 @media (max-width: 480px) {
+    .main {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
     .filter-btn {
         flex: 1 1 calc(50% - 10px);
         min-width: 110px;
@@ -653,6 +714,49 @@ body {
     .system-controls {
         top: 10px;
         right: 10px;
+    }
+
+    /* Seçim modu: mobilde butonlar alt alta veya 2'li sıralansın, taşma olmasın */
+    .bulk-actions {
+        gap: 6px;
+    }
+
+    .bulk-btn {
+        flex: 1 1 calc(50% - 5px);
+        min-width: 0;
+        padding: 8px 4px;
+        font-size: 11px;
+        gap: 4px;
+    }
+
+    .bulk-btn svg {
+        flex-shrink: 0;
+    }
+
+    .bulk-btn span {
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .selection-toggle {
+        flex: 1 1 100%;
+    }
+
+    .selection-row {
+        gap: 6px;
+    }
+
+    .selection-all-btn {
+        font-size: 11px;
+        padding: 4px 8px;
+    }
+
+    .selection-info {
+        flex: 1 1 100%;
+        font-size: 12px;
+        text-align: center;
     }
 
     /* Mobilde uzun metinlerin kart yüksekliğini çok artırmaması için:
