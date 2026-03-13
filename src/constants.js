@@ -1,6 +1,6 @@
 export const translations = {
     tr: {
-        header: "To-Do Lıst",
+        header: "What Too Doo",
         completedTitle: "Tamamlanan Hedefler",
         emptyWarn: "Lütfen bir hedef giriniz! ⚠️",
         deleteConfirm: "Bu hedefi silmek istediğinize emin misiniz? 🗑️",
@@ -64,7 +64,7 @@ export const translations = {
         selectAll: "Tümünü Seç"
     },
     fr: {
-        header: "Liste de tâches",
+        header: "What Too Doo",
         completedTitle: "Tâches terminées",
         emptyWarn: "Veuillez saisir une tâche ! ⚠️",
         deleteConfirm: "Voulez-vous vraiment supprimer cette tâche ? 🗑️",
@@ -128,7 +128,7 @@ export const translations = {
         selectAll: "Tout sélectionner"
     },
     en: {
-        header: "To-Do Lıst",
+        header: "What Too Doo",
         completedTitle: "Completed Tasks",
         emptyWarn: "Please enter a task! ⚠️",
         deleteConfirm: "Are you sure you want to delete this task? 🗑️",
