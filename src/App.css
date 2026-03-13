@@ -328,7 +328,9 @@ body {
     padding: 25px;
     border-radius: 16px;
     box-shadow: 0 10px 30px var(--shadow);
-    overflow-x: hidden;
+    /* clip: yatay taşmayı keser, scroll container oluşturmaz → gereksiz scrollbar çıkmaz */
+    overflow-x: clip;
+    overflow-y: visible;
 }
 
 .todo-input {
@@ -421,7 +423,8 @@ body {
     gap: 15px;
     margin: 25px 0;
     min-width: 0; /* flex child taşmasını önler */
-    overflow-x: hidden;
+    overflow-x: clip;
+    overflow-y: visible;
 }
 
 .filter-container {

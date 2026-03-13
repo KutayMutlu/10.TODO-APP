@@ -1,7 +1,7 @@
 import React from 'react';
 import { FcGoogle } from "react-icons/fc";
 
-function AuthChoiceCard({ lang, t, onLogin, onGuestLogin, authLoading }) {
+function AuthChoiceCard({ t, onLogin, onGuestLogin }) {
   return (
     <div className="login-container">
       <div className="login-card-mini">

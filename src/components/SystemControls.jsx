@@ -1,6 +1,7 @@
 import React from 'react';
 import { FaSun, FaMoon, FaSignOutAlt, FaGoogle } from "react-icons/fa";
 import { IoMdSettings } from "react-icons/io";
+/* eslint-disable-next-line no-unused-vars -- motion used in JSX */
 import { motion, AnimatePresence } from 'framer-motion';
 
 function SystemControls({

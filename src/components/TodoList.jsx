@@ -3,6 +3,7 @@ import Todo from './Todo'
 import { LuClipboardList } from "react-icons/lu";
 import { HiOutlineArchiveBoxXMark } from "react-icons/hi2";
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+/* eslint-disable-next-line no-unused-vars -- motion used in JSX */
 import { motion, AnimatePresence } from 'framer-motion';
 
 // 1. KONTROL: 'lang' parametresi buraya eklendi (Hatanın çözümü burası)

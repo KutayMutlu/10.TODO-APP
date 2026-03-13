@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 import AuthChoiceCard from './AuthChoiceCard';
+/* eslint-disable-next-line no-unused-vars -- motion used in JSX as motion.div */
 import { motion, AnimatePresence } from 'framer-motion';
 import ProgressBar from './ProgressBar';
 

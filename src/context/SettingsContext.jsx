@@ -107,6 +107,7 @@ export function SettingsProvider({ children }) {
   );
 }
 
+/* eslint-disable-next-line react-refresh/only-export-components -- useSettings is a hook, same module is intentional */
 export function useSettings() {
   const ctx = useContext(SettingsContext);
   if (!ctx) {

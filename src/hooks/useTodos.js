@@ -21,6 +21,8 @@ export function useTodos({ user, t, playSound }) {
 
   useEffect(() => {
     if (!user) {
+      // Kullanıcı çıkışında listeyi temizlemek için gerekli
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- sync with external auth state
       setTodos([]);
       return;
     }
@@ -72,7 +74,7 @@ export function useTodos({ user, t, playSound }) {
           createdAt: serverTimestamp(),
         });
         toast.info(t.addSuccess);
-      } catch (e) {
+      } catch {
         toast.error('Hata!');
       }
     },
@@ -85,7 +87,7 @@ export function useTodos({ user, t, playSound }) {
       try {
         await deleteDoc(doc(db, 'todos', id));
         toast.error(t.deleteSuccess);
-      } catch (e) {
+      } catch {
         // sessizce yut
       }
     },
@@ -100,7 +102,7 @@ export function useTodos({ user, t, playSound }) {
           content: newTodo.content,
         });
         toast.success(t.updateSuccess);
-      } catch (e) {
+      } catch {
         // sessizce yut
       }
     },
@@ -125,7 +127,7 @@ export function useTodos({ user, t, playSound }) {
           });
           if (!todo.isCompleted) playSound('add');
         }
-      } catch (e) {
+      } catch {
         // sessizce yut
       }
     },

@@ -6,6 +6,7 @@ import { MdDragIndicator, MdSettingsBackupRestore } from "react-icons/md";
 import "../App.css"
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+/* eslint-disable-next-line no-unused-vars -- motion used in JSX */
 import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
 import { formatTodoDate } from '../utils/date';
@@ -19,7 +20,6 @@ function Todo({
   t,
   lang,
   playSound,
-  isSoundEnabled,
   selectionMode,
   isSelected,
   onToggleSelect,

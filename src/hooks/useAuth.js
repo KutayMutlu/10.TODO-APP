@@ -45,7 +45,7 @@ export function useAuth({ t, lang, onAccountLinked }) {
     try {
       const result = await signInWithPopup(auth, provider);
       if (result.user) setUser(result.user);
-    } catch (error) {
+    } catch {
       toast.error(t.loginError);
     }
   }, [t]);

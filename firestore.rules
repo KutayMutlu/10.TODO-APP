@@ -17,8 +17,7 @@ service cloud.firestore {
     }
 
     function hasValidTodoFields() {
-      return
-        request.resource.data.keys().hasAll([
+      return request.resource.data.keys().hasAll([
           'content',
           'isCompleted',
           'isArchived',

@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import "../App.css";
 
-function TodoCreate({ onCreateTodo, t, playSound }) {
+function TodoCreate({ onCreateTodo, t }) {
     const [newTodo, setNewTodo] = useState('');
     const [isShaking, setIsShaking] = useState(false);
 
