@@ -2,10 +2,10 @@ import React, { Suspense, lazy } from 'react';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 import AuthChoiceCard from './AuthChoiceCard';
 import { motion, AnimatePresence } from 'framer-motion';
+import ProgressBar from './ProgressBar';
 
 const TodoCreate = lazy(() => import('./TodoCreate'));
 const TodoList = lazy(() => import('./TodoList'));
-const ProgressBar = lazy(() => import('./ProgressBar'));
 const TodoFilter = lazy(() => import('./TodoFilter'));
 
 function AuthSection({
