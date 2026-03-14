@@ -89,16 +89,21 @@ function App() {
     playSound,
   });
 
+  // Touch cihazlarda pointer/touch ile yanlışlıkla sürükleme olmasın diye kısa gecikme (ortalama 400–600 ms).
+  const isTouchDevice = useMemo(
+    () => typeof window !== 'undefined' && ('ontouchstart' in window || window.matchMedia('(pointer: coarse)').matches),
+    []
+  );
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8, // Mouse ile 8px hareket etmeden sürükleme başlamaz
-      },
+      activationConstraint: isTouchDevice
+        ? { delay: 500, tolerance: 25 }   // Mobilde ~0,5 sn basılı tutunca sürükleme
+        : { distance: 8 },
     }),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 250,    // iPhone için kritik: 250ms basılı tutunca sürükleme başlar
-        tolerance: 5,  // Parmağın 5px oynamasına izin verir (titreme payı)
+        delay: 500,
+        tolerance: 25,
       },
     }),
     useSensor(KeyboardSensor)
@@ -215,7 +220,8 @@ function App() {
     const ids = filteredTodos
       .filter((todo) => !todo.isArchived)
       .map((todo) => todo.id);
-    setSelectedIds(ids);
+    const allAlreadySelected = ids.length > 0 && ids.every((id) => selectedIds.includes(id));
+    setSelectedIds(allAlreadySelected ? [] : ids);
   };
 
   // Uygulama ilk açılırken (Firebase auth durumu henüz belli değilken) tam ekran, smooth bir yükleme ekranı göster

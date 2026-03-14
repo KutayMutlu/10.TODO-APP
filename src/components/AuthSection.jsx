@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { useState, useCallback, Suspense, lazy } from 'react';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 import AuthChoiceCard from './AuthChoiceCard';
 /* eslint-disable-next-line no-unused-vars -- motion used in JSX as motion.div */
@@ -40,6 +40,9 @@ function AuthSection({
   activeTodosOnly,
   progressPercentage,
 }) {
+  const [editingTodoId, setEditingTodoId] = useState(null);
+  const onEditEnd = useCallback(() => setEditingTodoId(null), []);
+
   if (!user) {
     return (
       <>
@@ -64,7 +67,7 @@ function AuthSection({
     <Suspense fallback={null}>
       {filter !== 'archive' && (
         <>
-          <TodoCreate onCreateTodo={onAddTodo} t={t} playSound={playSound} />
+          <TodoCreate onCreateTodo={onAddTodo} t={t} playSound={playSound} lang={lang} isEditActive={editingTodoId != null} />
           <AnimatePresence initial={false}>
             {activeTodosOnly.length > 0 && (
               <motion.div
@@ -96,7 +99,15 @@ function AuthSection({
         onSelectAll={onSelectAll}
       />
 
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={onDragEnd}
+        autoScroll={{
+          threshold: { x: 0, y: 0.2 },
+          acceleration: 10,
+        }}
+      >
         <TodoList
           todos={todos}
           setTodos={setTodos}
@@ -109,6 +120,9 @@ function AuthSection({
           selectionMode={selectionMode}
           selectedIds={selectedIds}
           onToggleSelect={onToggleSelect}
+          editingTodoId={editingTodoId}
+          onEditStart={setEditingTodoId}
+          onEditEnd={onEditEnd}
         />
       </DndContext>
     </Suspense>

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import Todo from './Todo'
 import { LuClipboardList } from "react-icons/lu";
 import { HiOutlineArchiveBoxXMark } from "react-icons/hi2";
@@ -19,7 +19,11 @@ function TodoList({
   selectionMode,
   selectedIds,
   onToggleSelect,
+  editingTodoId,
+  onEditStart,
+  onEditEnd,
 }) {
+  const [openActionsTodoId, setOpenActionsTodoId] = useState(null);
 
   // 2. KONTROL: Liste boşken hata vermemesi için güvenli kontrol
   const isArchiveView = todos && todos.length > 0 && todos[0].isArchived;
@@ -34,6 +38,7 @@ function TodoList({
                 key={todoItem.id}
                 initial={false}
                 exit={{ opacity: 0, y: 10, transition: { duration: 0.12 } }}
+                style={{ position: 'relative', zIndex: openActionsTodoId === todoItem.id ? 1000 : 1 }}
               >
                 <Todo
                   todo={todoItem}
@@ -43,11 +48,15 @@ function TodoList({
                   playSound={playSound}
                   isSoundEnabled={isSoundEnabled}
                   t={t}
-                  // 3. KONTROL: Todo bileşenine dil bilgisini aktarıyoruz
                   lang={lang}
                   selectionMode={selectionMode}
                   isSelected={selectedIds?.includes(todoItem.id)}
                   onToggleSelect={onToggleSelect}
+                  isEditing={editingTodoId === todoItem.id}
+                  editingTodoId={editingTodoId}
+                  onEditStart={onEditStart}
+                  onEditEnd={onEditEnd}
+                  onActionsOpenChange={(open) => setOpenActionsTodoId(open ? todoItem.id : null)}
                 />
               </motion.div>
             ))}

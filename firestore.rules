@@ -29,7 +29,8 @@ service cloud.firestore {
         && request.resource.data.isArchived is bool
         && request.resource.data.userId is string
         && request.resource.data.content.size() > 0
-        && request.resource.data.content.size() <= 1000;
+        && request.resource.data.content.size() <= 1000
+        && (!('deadline' in request.resource.data) || request.resource.data.deadline == null || request.resource.data.deadline is timestamp);
     }
 
     match /todos/{todoId} {

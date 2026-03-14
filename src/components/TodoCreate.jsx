@@ -1,12 +1,31 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import DateTimePicker from './DateTimePicker';
 import "../App.css";
 
-function TodoCreate({ onCreateTodo, t }) {
+function TodoCreate({ onCreateTodo, t, lang = 'en', isEditActive = false }) {
     const [newTodo, setNewTodo] = useState('');
+    const [deadline, setDeadline] = useState('');
     const [isShaking, setIsShaking] = useState(false);
+    const textareaRef = useRef(null);
+
+    const adjustTextareaHeight = useCallback(() => {
+        const el = textareaRef.current;
+        if (!el) return;
+        el.style.height = 'auto';
+        const oneLine = 40;
+        const maxH = 120;
+        const h = Math.max(oneLine, Math.min(el.scrollHeight, maxH));
+        el.style.height = h + 'px';
+        el.style.overflowY = el.scrollHeight > maxH ? 'auto' : 'hidden';
+    }, []);
+
+    useEffect(() => {
+        adjustTextareaHeight();
+    }, [newTodo, adjustTextareaHeight]);
 
     const clearInput = () => {
         setNewTodo("");
+        setDeadline("");
     }
 
     const createTodo = async () => {
@@ -20,11 +39,10 @@ function TodoCreate({ onCreateTodo, t }) {
         }
 
         // 2. KONTROL: Veri objesinin temizliği
-        // Not: 'id' ve 'createdAt' artık Firebase (App.jsx) tarafından atanıyor. 
-        // Manuel ID üretmek Firebase'in otomatik ID özelliğiyle çakışabilir.
         const request = {
-            content: newTodo
-        }
+            content: newTodo,
+            ...(deadline.trim() && { deadline: deadline.trim() }),
+        };
 
         try {
             // 3. KONTROL: Ekleme işlemini asenkron bekliyoruz
@@ -37,26 +55,29 @@ function TodoCreate({ onCreateTodo, t }) {
         }
     }
 
-    const handleKeyDown = (e) => {
-        // 5. KONTROL: Enter tuşuyla hızlı ekleme
-        if (e.key === 'Enter') {
-            createTodo();
-        }
-    }
+    // Enter her zaman yeni satır; gönder sadece butonla (mobilde liste yazarken Enter ile kaydetme olmasın)
 
     return (
-        /* 6. KONTROL: Dinamik sınıf atamasıyla sallanma efekti */
-        <div className={`todo-create ${isShaking ? 'shake' : ''}`}>
-            <input
-                value={newTodo}
-                onChange={(e) => setNewTodo(e.target.value)}
-                onKeyDown={handleKeyDown}
-                className='todo-input'
-                type="text"
-                placeholder={t.placeholder}
-            />
-            {/* 7. KONTROL: Buton metni dil desteğine (t) tam uyumlu */}
-            <button onClick={createTodo} className='todo-create-button'>
+        <div className={`todo-create ${isShaking ? 'shake' : ''} ${isEditActive ? 'todo-create-disabled' : ''}`}>
+            <div className="todo-create-row">
+                <textarea
+                    ref={textareaRef}
+                    value={newTodo}
+                    onChange={(e) => { setNewTodo(e.target.value); adjustTextareaHeight(); }}
+                    className="todo-input todo-input-text todo-input-textarea"
+                    placeholder={t.placeholder}
+                    disabled={isEditActive}
+                    tabIndex={isEditActive ? -1 : 0}
+                    rows={1}
+                />
+                <DateTimePicker
+                    value={deadline}
+                    onChange={(v) => setDeadline(v || '')}
+                    t={t}
+                    lang={lang}
+                />
+            </div>
+            <button onClick={createTodo} className="todo-create-button" disabled={isEditActive} tabIndex={isEditActive ? -1 : 0}>
                 {t.buttonText}
             </button>
         </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { db } from '../firebase';
 import {
   collection,
@@ -12,6 +12,7 @@ import {
   serverTimestamp,
   writeBatch,
   where,
+  Timestamp,
 } from 'firebase/firestore';
 import { toast } from 'react-toastify';
 import { formatFirebaseDate } from '../utils/date';
@@ -66,12 +67,16 @@ export function useTodos({ user, t, playSound }) {
       }
       try {
         playSound('add');
+        const deadlineTimestamp = newTodo.deadline
+          ? Timestamp.fromDate(new Date(newTodo.deadline))
+          : null;
         await addDoc(collection(db, 'todos'), {
           content: newTodo.content,
           isCompleted: false,
           isArchived: false,
           userId: user.uid,
           createdAt: serverTimestamp(),
+          ...(deadlineTimestamp && { deadline: deadlineTimestamp }),
         });
         toast.info(t.addSuccess);
       } catch {
@@ -83,23 +88,64 @@ export function useTodos({ user, t, playSound }) {
 
   const removeTodo = useCallback(
     async (id) => {
+      const deletedTodo = todos.find((item) => item.id === id);
+      if (!deletedTodo) return;
       playSound('delete');
       try {
         await deleteDoc(doc(db, 'todos', id));
-        toast.error(t.deleteSuccess);
+        const restorePayload = {
+          content: deletedTodo.content,
+          isCompleted: deletedTodo.isCompleted ?? false,
+          isArchived: deletedTodo.isArchived ?? false,
+          userId: user.uid,
+          createdAt: serverTimestamp(),
+          ...(deletedTodo.deadline != null && { deadline: deletedTodo.deadline }),
+          ...(deletedTodo.completedAt != null && { completedAt: deletedTodo.completedAt }),
+        };
+        const performUndo = () => {
+          addDoc(collection(db, 'todos'), restorePayload)
+            .then(() => toast.info(t.undoSuccess))
+            .catch(() => toast.error('Hata!'));
+        };
+        toast(
+          ({ closeToast }) => (
+            <div className="toast-undo-wrap">
+              <p className="toast-undo-message">{t.deleteSuccess}</p>
+              <button
+                type="button"
+                className="toast-undo-btn"
+                onClick={() => {
+                  performUndo();
+                  closeToast?.();
+                }}
+              >
+                {t.undo}
+              </button>
+            </div>
+          ),
+          {
+            type: 'error',
+            toastId: `delete-${id}`,
+            autoClose: 5000,
+          }
+        );
       } catch {
         // sessizce yut
       }
     },
-    [playSound, t]
+    [playSound, t, todos, user]
   );
 
   const updateTodo = useCallback(
     async (newTodo) => {
       if (!newTodo.content?.trim()) return;
       try {
+        const deadlineValue = newTodo.deadline
+          ? Timestamp.fromDate(new Date(newTodo.deadline))
+          : null;
         await updateDoc(doc(db, 'todos', newTodo.id), {
           content: newTodo.content,
+          deadline: deadlineValue,
         });
         toast.success(t.updateSuccess);
       } catch {
@@ -119,11 +165,14 @@ export function useTodos({ user, t, playSound }) {
           await updateDoc(doc(db, 'todos', id), {
             isArchived: false,
             isCompleted: false,
+            completedAt: null,
           });
           toast.info(t.restoreInfo);
         } else {
+          const newCompleted = !todo.isCompleted;
           await updateDoc(doc(db, 'todos', id), {
-            isCompleted: !todo.isCompleted,
+            isCompleted: newCompleted,
+            completedAt: newCompleted ? serverTimestamp() : null,
           });
           if (!todo.isCompleted) playSound('add');
         }
@@ -193,7 +242,7 @@ export function useTodos({ user, t, playSound }) {
        playSound('add');
       const batch = writeBatch(db);
       toComplete.forEach((todo) =>
-        batch.update(doc(db, 'todos', todo.id), { isCompleted: true })
+        batch.update(doc(db, 'todos', todo.id), { isCompleted: true, completedAt: serverTimestamp() })
       );
       batch.commit();
       toast.success(t.updateSuccess);
@@ -242,4 +291,3 @@ export function useTodos({ user, t, playSound }) {
     progressPercentage,
   };
 }
-

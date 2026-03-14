@@ -17,6 +17,7 @@ export function SettingsProvider({ children }) {
     const navLang = navigator.language || navigator.userLanguage || 'en';
     if (navLang.toLowerCase().startsWith('tr')) return 'tr';
     if (navLang.toLowerCase().startsWith('fr')) return 'fr';
+    if (navLang.toLowerCase().startsWith('sq')) return 'sq';
     return 'en';
   });
 

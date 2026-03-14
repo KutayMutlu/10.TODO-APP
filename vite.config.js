@@ -30,6 +30,7 @@ export default defineConfig({
   build: {
     target: 'esnext',
     cssCodeSplit: true,
+    chunkSizeWarningLimit: 700,
     rollupOptions: {
       output: {
         chunkFileNames: 'assets/js/[name]-[hash].js',
@@ -38,12 +39,8 @@ export default defineConfig({
 
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            // Firebase çok ağır olduğu için mutlaka ayrı olmalı
             if (id.includes('firebase')) return 'vendor-firebase';
-            // Animasyon kütüphanesini ayırmak performansı artırır
             if (id.includes('framer-motion')) return 'vendor-framer';
-
-            // React ve diğerlerini tek bir 'vendor' altında toplamak döngüsel hatayı çözer
             return 'vendor';
           }
         }

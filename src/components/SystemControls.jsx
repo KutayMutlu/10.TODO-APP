@@ -56,6 +56,7 @@ function SystemControls({
                   <option value="tr">Türkçe 🇹🇷</option>
                   <option value="en">English 🇺🇸</option>
                   <option value="fr">Français 🇫🇷</option>
+                  <option value="sq">Shqip 🇦🇱</option>
                 </select>
               </div>
               <div className="setting-item">
