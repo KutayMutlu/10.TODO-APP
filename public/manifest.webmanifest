@@ -3,7 +3,7 @@
   "short_name": "What To Doodle",
   "description": "Benim Todo Uygulamam",
   "theme_color": "#6c63ff",
-  "background_color": "#ffffff",
+  "background_color": "#6c63ff",
   "display": "standalone",
   "start_url": "/",
   "icons": [

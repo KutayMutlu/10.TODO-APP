@@ -7,12 +7,13 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['logo.png', 'logo-192.png', 'logo-512.png', 'favicon.ico', 'robots.txt'],
+      includeAssets: ['logo.png', 'logo-48.png', 'logo-192.png', 'logo-512.png', 'favicon.ico', 'robots.txt'],
       manifest: {
         name: 'What To Doodle',
         short_name: 'What To Doodle',
         description: 'Benim Todo Uygulamam',
         theme_color: '#6c63ff',
+        background_color: '#6c63ff',
         icons: [
           { src: 'logo-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
           { src: 'logo-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' }
