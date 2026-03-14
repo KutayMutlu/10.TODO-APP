@@ -1,13 +1,13 @@
 {
-  "name": "Todo App",
-  "short_name": "Todo",
+  "name": "What To Doodle",
+  "short_name": "What To Doodle",
   "description": "Benim Todo Uygulamam",
   "theme_color": "#6c63ff",
   "background_color": "#ffffff",
   "display": "standalone",
   "start_url": "/",
   "icons": [
-    { "src": "/logo.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/logo.png", "sizes": "512x512", "type": "image/png" }
+    { "src": "/logo-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/logo-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
   ]
 }
