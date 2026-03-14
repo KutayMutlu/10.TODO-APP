@@ -908,13 +908,27 @@ body.todo-edit-overlay-open #root {
 }
 
 .date-time-picker-selected-time-row .date-time-picker-selected-value {
-    overflow: hidden;
-    text-overflow: ellipsis;
+    min-width: 3.5rem; /* "00:00" her zaman tam görünsün */
     white-space: nowrap;
 }
 
 .date-time-picker-selected-time-row .date-time-picker-confirm-btn {
     flex-shrink: 0;
+}
+
+/* Mobil: saat + onayla sığması için satır kırılabilsin, buton alta insin */
+@media (max-width: 480px) {
+    .date-time-picker-selected-time-row {
+        flex-wrap: wrap;
+    }
+    .date-time-picker-selected-time-row .date-time-picker-selected-time {
+        flex: 1 1 100%;
+        min-width: 0;
+    }
+    .date-time-picker-selected-time-row .date-time-picker-confirm-btn {
+        flex: 1 1 100%;
+        justify-content: center;
+    }
 }
 
 .date-time-picker-confirm-btn {

@@ -402,7 +402,7 @@ function Todo({
                             <span
                                 className={`todo-text-content ${isExpanded ? 'full-text' : 'truncated-text'}`}
                                 style={{
-                                    textDecoration: (isCompleted || isArchived) ? 'line-through' : 'none',
+                                    textDecoration: 'none',
                                     opacity: (isCompleted || isArchived) ? 0.6 : 1,
                                     transition: 'all 0.3s ease'
                                 }}

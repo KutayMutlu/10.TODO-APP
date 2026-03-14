@@ -370,7 +370,7 @@ function DateTimePicker({ value, onChange, t, lang = 'en', usePortal = false, on
                     <div className={`date-time-picker-selected-time${timeJustUpdated ? ' date-time-picker-selected-time-just-updated' : ''}`}>
                       <span className="date-time-picker-selected-label">{t.selectedTimeLabel}</span>
                       <span className="date-time-picker-selected-value">
-                        {pad(hour)}:{pad(minute)}
+                        {pad(Number(hour))}:{pad(Number(minute))}
                         <HiCheckCircle className="date-time-picker-selected-check" aria-hidden />
                       </span>
                     </div>
@@ -502,7 +502,7 @@ function DateTimePicker({ value, onChange, t, lang = 'en', usePortal = false, on
                   <div className={`date-time-picker-selected-time${timeJustUpdated ? ' date-time-picker-selected-time-just-updated' : ''}`}>
                     <span className="date-time-picker-selected-label">{t.selectedTimeLabel}</span>
                     <span className="date-time-picker-selected-value">
-                      {pad(hour)}:{pad(minute)}
+                      {pad(Number(hour))}:{pad(Number(minute))}
                       <HiCheckCircle className="date-time-picker-selected-check" aria-hidden />
                     </span>
                   </div>
