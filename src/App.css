@@ -992,12 +992,14 @@ body.todo-edit-overlay-open #root {
     margin-bottom: 4px;
 }
 
+/* iPhone alarm tarzı: ortadaki yuva vurgulu, üst/alt hafif soluk */
 .date-time-picker-wheel-wrap {
     position: relative;
     width: 100%;
     max-width: 56px;
+    mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
 }
-
 .date-time-picker-wheel-wrap::after {
     content: "";
     position: absolute;
@@ -1008,10 +1010,12 @@ body.todo-edit-overlay-open #root {
     transform: translateY(-50%);
     pointer-events: none;
     border-radius: 6px;
-    background: rgba(108, 99, 255, 0.15);
+    background: rgba(108, 99, 255, 0.2);
     margin: 0 2px;
+    box-shadow: 0 0 0 1px rgba(108, 99, 255, 0.12);
 }
 
+/* Mobilde scrollbar gizli, masaüstünde görünsün */
 .date-time-picker-wheel {
     width: 100%;
     max-width: 56px;
@@ -1023,20 +1027,51 @@ body.todo-edit-overlay-open #root {
     border: 1px solid var(--border-color);
     border-radius: 10px;
     background: var(--card-bg);
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
 
 .date-time-picker-wheel::-webkit-scrollbar {
-    width: 4px;
+    display: none;
 }
 
-.date-time-picker-wheel::-webkit-scrollbar-track {
-    background: var(--border-color);
-    border-radius: 2px;
+/* Masaüstü: scrollbar yok, üst/alt ok butonları ile tek adım */
+.date-time-picker-wheel-with-arrows {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
 }
 
-.date-time-picker-wheel::-webkit-scrollbar-thumb {
-    background: var(--primary-color);
-    border-radius: 2px;
+.date-time-picker-wheel-arrow {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 28px;
+    padding: 0;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--card-bg);
+    color: var(--primary-color);
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, transform 0.1s;
+}
+.date-time-picker-wheel-arrow:hover {
+    background: rgba(108, 99, 255, 0.12);
+}
+.date-time-picker-wheel-arrow:active {
+    transform: scale(0.95);
+}
+.date-time-picker-wheel-arrow svg {
+    width: 18px;
+    height: 18px;
+}
+
+@media (min-width: 769px) {
+    .date-time-picker-wheel-arrow {
+        display: flex;
+    }
 }
 
 .date-time-picker-wheel-pad {

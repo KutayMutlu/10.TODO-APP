@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import DatePicker, { registerLocale } from 'react-datepicker';
-import { HiOutlineCalendar, HiOutlineArrowLeft, HiCheckCircle } from 'react-icons/hi2';
+import { HiOutlineCalendar, HiOutlineArrowLeft, HiCheckCircle, HiOutlineChevronUp, HiOutlineChevronDown } from 'react-icons/hi2';
 import tr from 'date-fns/locale/tr';
 import fr from 'date-fns/locale/fr';
 import enUS from 'date-fns/locale/en-US';
@@ -11,6 +11,14 @@ import '../App.css';
 
 const ITEM_HEIGHT = 32;
 const PADDING_ITEMS = 2;
+const WHEEL_COPIES = 3; /* döngüsel tekerlek: listeyi 3 kopya render edip ortada kalıyoruz */
+const WHEEL_VIEWPORT_HEIGHT = 140; /* App.css .date-time-picker-wheel height ile aynı */
+/* Mouse wheel: her tık = tam 1 öğe (tek tık = tek adım) */
+/* Seçili öğenin viewport ortasında görünmesi için scroll offset (iPhone alarm mantığı) */
+const scrollTopToCenterIndex = (padH, listLength, index) => {
+  const centerOffset = (WHEEL_VIEWPORT_HEIGHT / 2) - (ITEM_HEIGHT / 2);
+  return padH + listLength * ITEM_HEIGHT + index * ITEM_HEIGHT - centerOffset;
+};
 
 registerLocale('tr', tr);
 registerLocale('fr', fr);
@@ -31,6 +39,8 @@ function DateTimePicker({ value, onChange, t, lang = 'en', usePortal = false, on
   const hourScrollRef = useRef(null);
   const minuteScrollRef = useRef(null);
   const didSetInitialStepRef = useRef(false);
+  const isScrollJumpRef = useRef(false);
+  const didSyncScrollRef = useRef(false);
 
   const parseValue = (v) => {
     if (!v || !String(v).trim()) return null;
@@ -120,25 +130,37 @@ function DateTimePicker({ value, onChange, t, lang = 'en', usePortal = false, on
     }
     setHour(h);
     setMinute(m);
-    const minListForSync = !isSelectedToday
-      ? Array.from({ length: 60 }, (_, i) => i)
-      : h > now.getHours()
-        ? Array.from({ length: 60 }, (_, i) => i)
-        : h === now.getHours() && minMinuteWhenCurrentHour <= 59
-          ? Array.from({ length: 60 - minMinuteWhenCurrentHour }, (_, i) => minMinuteWhenCurrentHour + i)
-          : Array.from({ length: 60 }, (_, i) => i);
+    didSyncScrollRef.current = false;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only set hour/minute when entering time step
+  }, [open, step, value, isSelectedToday]);
+
+  /* Scroll konumunu saat/dakika güncellendikten ve doğru liste render edildikten sonra senkronize et (tek sefer) */
+  useEffect(() => {
+    if (!open || step !== 'time') {
+      didSyncScrollRef.current = false;
+      return;
+    }
+    if (didSyncScrollRef.current) return;
+    if (!hoursList.length) return;
+    const padH = PADDING_ITEMS * ITEM_HEIGHT;
+    const hourIdx = hoursList.indexOf(hour);
+    const minIdx = minutesList.indexOf(minute);
+    if (hourIdx < 0 || minIdx < 0) return;
+    didSyncScrollRef.current = true;
+    const maxScroll = (L) => 2 * padH + 3 * L * ITEM_HEIGHT - WHEEL_VIEWPORT_HEIGHT;
     requestAnimationFrame(() => {
-      const hourIdx = hoursList.indexOf(h);
-      const minIdx = minListForSync.indexOf(m);
-      if (hourScrollRef.current && hourIdx >= 0) {
-        hourScrollRef.current.scrollTop = hourIdx * ITEM_HEIGHT;
+      if (hourScrollRef.current) {
+        const t = scrollTopToCenterIndex(padH, hoursList.length, hourIdx);
+        hourScrollRef.current.scrollTop = Math.max(0, Math.min(maxScroll(hoursList.length), t));
       }
-      if (minuteScrollRef.current && minIdx >= 0) {
-        minuteScrollRef.current.scrollTop = minIdx * ITEM_HEIGHT;
+      if (minuteScrollRef.current && minutesList.length > 0) {
+        const t = scrollTopToCenterIndex(padH, minutesList.length, minIdx);
+        minuteScrollRef.current.scrollTop = Math.max(0, Math.min(maxScroll(minutesList.length), t));
       }
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- sync time step with value; intentional limited deps to avoid loops
-  }, [open, step, value, isSelectedToday]);
+    // hoursList/minutesList closure'dan; sadece open, step, hour, minute değişince çalışsın (scroll her değişimde değil)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, step, hour, minute]);
 
   const scrollEndTimeoutRef = useRef(null);
 
@@ -163,19 +185,66 @@ function DateTimePicker({ value, onChange, t, lang = 'en', usePortal = false, on
     return Math.max(m, minMinuteWhenCurrentHour);
   };
 
+  /* Masaüstü: ok butonu veya wheel ile tek adım */
+  const handleWheelStep = (scrollRef, listLength, direction) => {
+    const el = scrollRef.current;
+    if (!el || !listLength) return;
+    const padH = PADDING_ITEMS * ITEM_HEIGHT;
+    const maxScroll = 2 * padH + 3 * listLength * ITEM_HEIGHT - WHEEL_VIEWPORT_HEIGHT;
+    const step = direction > 0 ? ITEM_HEIGHT : -ITEM_HEIGHT;
+    el.scrollTop = Math.max(0, Math.min(maxScroll, el.scrollTop + step));
+  };
+
+  const handleWheelDelta = (e, scrollRef, listLength) => {
+    const el = scrollRef.current;
+    if (!el || !listLength) return;
+    e.preventDefault();
+    const padH = PADDING_ITEMS * ITEM_HEIGHT;
+    const maxScroll = 2 * padH + 3 * listLength * ITEM_HEIGHT - WHEEL_VIEWPORT_HEIGHT;
+    const step = e.deltaY > 0 ? ITEM_HEIGHT : e.deltaY < 0 ? -ITEM_HEIGHT : 0;
+    if (step === 0) return;
+    el.scrollTop = Math.max(0, Math.min(maxScroll, el.scrollTop + step));
+  };
+
   const handleWheelScroll = (scrollRef, list, setter, otherValue, isHour) => {
+    if (isScrollJumpRef.current) return;
     const el = scrollRef.current;
     if (!el || !list.length) return;
-    const index = Math.round(el.scrollTop / ITEM_HEIGHT);
-    const clamped = Math.max(0, Math.min(list.length - 1, index));
-    const value = list[clamped];
+    const padH = PADDING_ITEMS * ITEM_HEIGHT;
+    /* Viewport ortasındaki öğeyi seçili say (iPhone alarm mantığı) */
+    const centerY = el.scrollTop + WHEEL_VIEWPORT_HEIGHT / 2;
+    const rawIndex = Math.round((centerY - padH - ITEM_HEIGHT / 2) / ITEM_HEIGHT);
+    const logicalIndex = ((rawIndex % list.length) + list.length) % list.length;
+    const value = list[logicalIndex];
     setter(value);
     const h = isHour ? value : otherValue;
     const m = isHour ? clampMinuteForToday(value, otherValue) : clampMinuteForToday(otherValue, value);
     if (m !== (isHour ? otherValue : value)) setMinute(m);
+    const middleStart = padH + list.length * ITEM_HEIGHT;
+    const middleEnd = padH + 2 * list.length * ITEM_HEIGHT;
+    const maxScroll = 2 * padH + 3 * list.length * ITEM_HEIGHT - WHEEL_VIEWPORT_HEIGHT;
+    const targetTop = Math.max(0, Math.min(maxScroll, scrollTopToCenterIndex(padH, list.length, logicalIndex)));
+    let didJump = false;
+    if (el.scrollTop < middleStart) {
+      isScrollJumpRef.current = true;
+      didJump = true;
+      el.scrollTop = targetTop;
+      requestAnimationFrame(() => { isScrollJumpRef.current = false; });
+    } else if (el.scrollTop >= middleEnd) {
+      isScrollJumpRef.current = true;
+      didJump = true;
+      el.scrollTop = targetTop;
+      requestAnimationFrame(() => { isScrollJumpRef.current = false; });
+    }
+    if (didJump) {
+      applyTimeFromWheels(h, m);
+      if (scrollEndTimeoutRef.current) clearTimeout(scrollEndTimeoutRef.current);
+      scrollEndTimeoutRef.current = null;
+      return;
+    }
     if (scrollEndTimeoutRef.current) clearTimeout(scrollEndTimeoutRef.current);
     scrollEndTimeoutRef.current = setTimeout(() => {
-      el.scrollTo({ top: clamped * ITEM_HEIGHT, behavior: 'smooth' });
+      el.scrollTo({ top: targetTop, behavior: 'smooth' });
       applyTimeFromWheels(h, m);
       scrollEndTimeoutRef.current = null;
     }, 100);
@@ -190,7 +259,10 @@ function DateTimePicker({ value, onChange, t, lang = 'en', usePortal = false, on
     const h = isHour ? value : otherValue;
     const m = isHour ? clampMinuteForToday(value, otherValue) : clampMinuteForToday(otherValue, value);
     if (m !== (isHour ? otherValue : value)) setMinute(m);
-    el.scrollTo({ top: index * ITEM_HEIGHT, behavior: 'smooth' });
+    const padH = PADDING_ITEMS * ITEM_HEIGHT;
+    const targetTop = scrollTopToCenterIndex(padH, list.length, index);
+    const maxScroll = 2 * padH + 3 * list.length * ITEM_HEIGHT - WHEEL_VIEWPORT_HEIGHT;
+    el.scrollTo({ top: Math.max(0, Math.min(maxScroll, targetTop)), behavior: 'smooth' });
     applyTimeFromWheels(h, m);
   };
 
@@ -218,6 +290,9 @@ function DateTimePicker({ value, onChange, t, lang = 'en', usePortal = false, on
       : hour === now.getHours()
         ? (minMinuteWhenCurrentHour <= 59 ? Array.from({ length: 60 - minMinuteWhenCurrentHour }, (_, i) => minMinuteWhenCurrentHour + i) : [])
         : Array.from({ length: 60 }, (_, i) => i);
+
+  const wheelHoursList = Array.from({ length: WHEEL_COPIES }, () => hoursList).flat();
+  const wheelMinutesList = Array.from({ length: WHEEL_COPIES }, () => minutesList).flat();
 
   return (
     <div className="date-time-picker-wrap" ref={wrapRef}>
@@ -297,7 +372,7 @@ function DateTimePicker({ value, onChange, t, lang = 'en', usePortal = false, on
                     onClick={(e) => { e.stopPropagation(); setStep('date'); }}
                     onMouseDown={(e) => e.stopPropagation()}
                     onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setStep('date'); }}
-                    aria-label={t.back}
+                    aria-label="Yukarı"
                   >
                     <HiOutlineArrowLeft className="date-time-picker-back-icon" />
                     <span>{t.back}</span>
@@ -315,54 +390,72 @@ function DateTimePicker({ value, onChange, t, lang = 'en', usePortal = false, on
                   <div className="date-time-picker-wheel-row">
                     <div className="date-time-picker-wheel-col">
                       <span className="date-time-picker-wheel-label">{t.hourLabel}</span>
-                      <div className="date-time-picker-wheel-wrap">
-                        <div
-                          className="date-time-picker-wheel"
-                          ref={hourScrollRef}
-                          onScroll={() => handleWheelScroll(hourScrollRef, hoursList, setHour, minute, true)}
-                        >
-                          <div className="date-time-picker-wheel-pad" style={{ height: PADDING_ITEMS * ITEM_HEIGHT }} />
-                          {hoursList.map((h) => (
-                            <div
-                              key={h}
-                              role="button"
-                              tabIndex={0}
-                              className={`date-time-picker-wheel-item${h === hour ? ' is-selected' : ''}`}
-                              style={{ height: ITEM_HEIGHT }}
-                              onClick={() => handleWheelItemClick(hourScrollRef, h, hoursList, setHour, minute, true)}
-                              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleWheelItemClick(hourScrollRef, h, hoursList, setHour, minute, true); } }}
-                            >
-                              {pad(h)}
-                            </div>
-                          ))}
-                          <div className="date-time-picker-wheel-pad" style={{ height: PADDING_ITEMS * ITEM_HEIGHT }} />
+                      <div className="date-time-picker-wheel-with-arrows">
+                        <button type="button" className="date-time-picker-wheel-arrow date-time-picker-wheel-arrow-up" onClick={() => handleWheelStep(hourScrollRef, hoursList.length, -1)} aria-label="Yukarı">
+                          <HiOutlineChevronUp />
+                        </button>
+                        <div className="date-time-picker-wheel-wrap">
+                          <div
+                            className="date-time-picker-wheel"
+                            ref={hourScrollRef}
+                            onWheel={(e) => handleWheelDelta(e, hourScrollRef, hoursList.length)}
+                            onScroll={() => handleWheelScroll(hourScrollRef, hoursList, setHour, minute, true)}
+                          >
+                            <div className="date-time-picker-wheel-pad" style={{ height: PADDING_ITEMS * ITEM_HEIGHT }} />
+                            {wheelHoursList.map((h, idx) => (
+                              <div
+                                key={`hour-${idx}`}
+                                role="button"
+                                tabIndex={0}
+                                className={`date-time-picker-wheel-item${h === hour ? ' is-selected' : ''}`}
+                                style={{ height: ITEM_HEIGHT }}
+                                onClick={() => handleWheelItemClick(hourScrollRef, h, hoursList, setHour, minute, true)}
+                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleWheelItemClick(hourScrollRef, h, hoursList, setHour, minute, true); } }}
+                              >
+                                {pad(h)}
+                              </div>
+                            ))}
+                            <div className="date-time-picker-wheel-pad" style={{ height: PADDING_ITEMS * ITEM_HEIGHT }} />
+                          </div>
                         </div>
+                        <button type="button" className="date-time-picker-wheel-arrow date-time-picker-wheel-arrow-down" onClick={() => handleWheelStep(hourScrollRef, hoursList.length, 1)} aria-label="Aşağı">
+                          <HiOutlineChevronDown />
+                        </button>
                       </div>
                     </div>
                     <div className="date-time-picker-wheel-col">
                       <span className="date-time-picker-wheel-label">{t.minuteLabel}</span>
-                      <div className="date-time-picker-wheel-wrap">
-                        <div
-                          className="date-time-picker-wheel"
-                          ref={minuteScrollRef}
-                          onScroll={() => handleWheelScroll(minuteScrollRef, minutesList, setMinute, hour, false)}
-                        >
-                          <div className="date-time-picker-wheel-pad" style={{ height: PADDING_ITEMS * ITEM_HEIGHT }} />
-                          {minutesList.map((m) => (
-                            <div
-                              key={m}
-                              role="button"
-                              tabIndex={0}
-                              className={`date-time-picker-wheel-item${m === minute ? ' is-selected' : ''}`}
-                              style={{ height: ITEM_HEIGHT }}
-                              onClick={() => handleWheelItemClick(minuteScrollRef, m, minutesList, setMinute, hour, false)}
-                              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleWheelItemClick(minuteScrollRef, m, minutesList, setMinute, hour, false); } }}
-                            >
-                              {pad(m)}
-                            </div>
-                          ))}
-                          <div className="date-time-picker-wheel-pad" style={{ height: PADDING_ITEMS * ITEM_HEIGHT }} />
+                      <div className="date-time-picker-wheel-with-arrows">
+                        <button type="button" className="date-time-picker-wheel-arrow date-time-picker-wheel-arrow-up" onClick={() => handleWheelStep(minuteScrollRef, minutesList.length, -1)} aria-label="Yukarı">
+                          <HiOutlineChevronUp />
+                        </button>
+                        <div className="date-time-picker-wheel-wrap">
+                          <div
+                            className="date-time-picker-wheel"
+                            ref={minuteScrollRef}
+                            onWheel={(e) => handleWheelDelta(e, minuteScrollRef, minutesList.length)}
+                            onScroll={() => handleWheelScroll(minuteScrollRef, minutesList, setMinute, hour, false)}
+                          >
+                            <div className="date-time-picker-wheel-pad" style={{ height: PADDING_ITEMS * ITEM_HEIGHT }} />
+                            {wheelMinutesList.map((m, idx) => (
+                              <div
+                                key={`min-${idx}`}
+                                role="button"
+                                tabIndex={0}
+                                className={`date-time-picker-wheel-item${m === minute ? ' is-selected' : ''}`}
+                                style={{ height: ITEM_HEIGHT }}
+                                onClick={() => handleWheelItemClick(minuteScrollRef, m, minutesList, setMinute, hour, false)}
+                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleWheelItemClick(minuteScrollRef, m, minutesList, setMinute, hour, false); } }}
+                              >
+                                {pad(m)}
+                              </div>
+                            ))}
+                            <div className="date-time-picker-wheel-pad" style={{ height: PADDING_ITEMS * ITEM_HEIGHT }} />
+                          </div>
                         </div>
+                        <button type="button" className="date-time-picker-wheel-arrow date-time-picker-wheel-arrow-down" onClick={() => handleWheelStep(minuteScrollRef, minutesList.length, 1)} aria-label="Aşağı">
+                          <HiOutlineChevronDown />
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -429,7 +522,7 @@ function DateTimePicker({ value, onChange, t, lang = 'en', usePortal = false, on
                     onClick={(e) => { e.stopPropagation(); setStep('date'); }}
                     onMouseDown={(e) => e.stopPropagation()}
                     onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setStep('date'); }}
-                    aria-label={t.back}
+                    aria-label="Yukarı"
                   >
                     <HiOutlineArrowLeft className="date-time-picker-back-icon" />
                     <span>{t.back}</span>
@@ -447,54 +540,72 @@ function DateTimePicker({ value, onChange, t, lang = 'en', usePortal = false, on
                 <div className="date-time-picker-wheel-row">
                   <div className="date-time-picker-wheel-col">
                     <span className="date-time-picker-wheel-label">{t.hourLabel}</span>
-                    <div className="date-time-picker-wheel-wrap">
-                      <div
-                        className="date-time-picker-wheel"
-                        ref={hourScrollRef}
-                        onScroll={() => handleWheelScroll(hourScrollRef, hoursList, setHour, minute, true)}
-                      >
-                        <div className="date-time-picker-wheel-pad" style={{ height: PADDING_ITEMS * ITEM_HEIGHT }} />
-                        {hoursList.map((h) => (
-                          <div
-                            key={h}
-                            role="button"
-                            tabIndex={0}
-                            className={`date-time-picker-wheel-item${h === hour ? ' is-selected' : ''}`}
-                            style={{ height: ITEM_HEIGHT }}
-                            onClick={() => handleWheelItemClick(hourScrollRef, h, hoursList, setHour, minute, true)}
-                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleWheelItemClick(hourScrollRef, h, hoursList, setHour, minute, true); } }}
-                          >
-                            {pad(h)}
-                          </div>
-                        ))}
-                        <div className="date-time-picker-wheel-pad" style={{ height: PADDING_ITEMS * ITEM_HEIGHT }} />
+                    <div className="date-time-picker-wheel-with-arrows">
+                      <button type="button" className="date-time-picker-wheel-arrow date-time-picker-wheel-arrow-up" onClick={() => handleWheelStep(hourScrollRef, hoursList.length, -1)} aria-label="Yukarı">
+                        <HiOutlineChevronUp />
+                      </button>
+                      <div className="date-time-picker-wheel-wrap">
+                        <div
+                          className="date-time-picker-wheel"
+                          ref={hourScrollRef}
+                          onWheel={(e) => handleWheelDelta(e, hourScrollRef, hoursList.length)}
+                          onScroll={() => handleWheelScroll(hourScrollRef, hoursList, setHour, minute, true)}
+                        >
+                          <div className="date-time-picker-wheel-pad" style={{ height: PADDING_ITEMS * ITEM_HEIGHT }} />
+                          {wheelHoursList.map((h, idx) => (
+                            <div
+                              key={`hour-${idx}`}
+                              role="button"
+                              tabIndex={0}
+                              className={`date-time-picker-wheel-item${h === hour ? ' is-selected' : ''}`}
+                              style={{ height: ITEM_HEIGHT }}
+                              onClick={() => handleWheelItemClick(hourScrollRef, h, hoursList, setHour, minute, true)}
+                              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleWheelItemClick(hourScrollRef, h, hoursList, setHour, minute, true); } }}
+                            >
+                              {pad(h)}
+                            </div>
+                          ))}
+                          <div className="date-time-picker-wheel-pad" style={{ height: PADDING_ITEMS * ITEM_HEIGHT }} />
+                        </div>
                       </div>
+                      <button type="button" className="date-time-picker-wheel-arrow date-time-picker-wheel-arrow-down" onClick={() => handleWheelStep(hourScrollRef, hoursList.length, 1)} aria-label="Aşağı">
+                        <HiOutlineChevronDown />
+                      </button>
                     </div>
                   </div>
                   <div className="date-time-picker-wheel-col">
                     <span className="date-time-picker-wheel-label">{t.minuteLabel}</span>
-                    <div className="date-time-picker-wheel-wrap">
-                      <div
-                        className="date-time-picker-wheel"
-                        ref={minuteScrollRef}
-                        onScroll={() => handleWheelScroll(minuteScrollRef, minutesList, setMinute, hour, false)}
-                      >
-                        <div className="date-time-picker-wheel-pad" style={{ height: PADDING_ITEMS * ITEM_HEIGHT }} />
-                        {minutesList.map((m) => (
-                          <div
-                            key={m}
-                            role="button"
-                            tabIndex={0}
-                            className={`date-time-picker-wheel-item${m === minute ? ' is-selected' : ''}`}
-                            style={{ height: ITEM_HEIGHT }}
-                            onClick={() => handleWheelItemClick(minuteScrollRef, m, minutesList, setMinute, hour, false)}
-                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleWheelItemClick(minuteScrollRef, m, minutesList, setMinute, hour, false); } }}
-                          >
-                            {pad(m)}
-                          </div>
-                        ))}
-                        <div className="date-time-picker-wheel-pad" style={{ height: PADDING_ITEMS * ITEM_HEIGHT }} />
+                    <div className="date-time-picker-wheel-with-arrows">
+                      <button type="button" className="date-time-picker-wheel-arrow date-time-picker-wheel-arrow-up" onClick={() => handleWheelStep(minuteScrollRef, minutesList.length, -1)} aria-label="Yukarı">
+                        <HiOutlineChevronUp />
+                      </button>
+                      <div className="date-time-picker-wheel-wrap">
+                        <div
+                          className="date-time-picker-wheel"
+                          ref={minuteScrollRef}
+                          onWheel={(e) => handleWheelDelta(e, minuteScrollRef, minutesList.length)}
+                          onScroll={() => handleWheelScroll(minuteScrollRef, minutesList, setMinute, hour, false)}
+                        >
+                          <div className="date-time-picker-wheel-pad" style={{ height: PADDING_ITEMS * ITEM_HEIGHT }} />
+                          {wheelMinutesList.map((m, idx) => (
+                            <div
+                              key={`min-${idx}`}
+                              role="button"
+                              tabIndex={0}
+                              className={`date-time-picker-wheel-item${m === minute ? ' is-selected' : ''}`}
+                              style={{ height: ITEM_HEIGHT }}
+                              onClick={() => handleWheelItemClick(minuteScrollRef, m, minutesList, setMinute, hour, false)}
+                              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleWheelItemClick(minuteScrollRef, m, minutesList, setMinute, hour, false); } }}
+                            >
+                              {pad(m)}
+                            </div>
+                          ))}
+                          <div className="date-time-picker-wheel-pad" style={{ height: PADDING_ITEMS * ITEM_HEIGHT }} />
+                        </div>
                       </div>
+                      <button type="button" className="date-time-picker-wheel-arrow date-time-picker-wheel-arrow-down" onClick={() => handleWheelStep(minuteScrollRef, minutesList.length, 1)} aria-label="Aşağı">
+                        <HiOutlineChevronDown />
+                      </button>
                     </div>
                   </div>
                 </div>
