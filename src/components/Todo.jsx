@@ -75,6 +75,10 @@ function Todo({
         el.style.overflowY = el.scrollHeight > maxH ? 'auto' : 'hidden';
     }, []);
 
+    const handlePickerClose = useCallback(() => setActionsOpen(false), []);
+    /* Create ile aynı: DateTimePicker sadece Onayla (ve Tarih yok) ile onChange çağırır; ara seçimler editDeadline'ı güncellemez. */
+    const handleEditDeadlineChange = useCallback((v) => setEditDeadline(v || ''), []);
+
     useEffect(() => {
         if (editable && inputRef.current) {
             inputRef.current.focus();
@@ -298,7 +302,7 @@ function Todo({
                         {actionsOpen && (
                             <div className="todo-edit-actions-menu" onClick={(e) => e.stopPropagation()}>
                                 <div className="todo-edit-actions-deadline todo-edit-deadline">
-                                    <DateTimePicker value={editDeadline} onChange={(v) => setEditDeadline(v || '')} t={t} lang={lang} usePortal onClose={() => setActionsOpen(false)} />
+                                    <DateTimePicker value={editDeadline} onChange={handleEditDeadlineChange} t={t} lang={lang} usePortal onClose={handlePickerClose} />
                                 </div>
                             </div>
                         )}
