@@ -1035,42 +1035,36 @@ body.todo-edit-overlay-open #root {
     display: none;
 }
 
-/* Masaüstü: scrollbar yok, üst/alt ok butonları ile tek adım */
-.date-time-picker-wheel-with-arrows {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-}
-
-.date-time-picker-wheel-arrow {
-    display: none;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 28px;
-    padding: 0;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    background: var(--card-bg);
-    color: var(--primary-color);
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s, transform 0.1s;
-}
-.date-time-picker-wheel-arrow:hover {
-    background: rgba(108, 99, 255, 0.12);
-}
-.date-time-picker-wheel-arrow:active {
-    transform: scale(0.95);
-}
-.date-time-picker-wheel-arrow svg {
-    width: 18px;
-    height: 18px;
-}
-
+/* Masaüstü: ince scrollbar, temaya uygun çerçevesiz */
 @media (min-width: 769px) {
-    .date-time-picker-wheel-arrow {
-        display: flex;
+    .date-time-picker-wheel {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(108, 99, 255, 0.4) transparent;
+        -ms-overflow-style: auto;
+    }
+    .date-time-picker-wheel::-webkit-scrollbar {
+        display: block;
+        width: 5px;
+    }
+    .date-time-picker-wheel::-webkit-scrollbar-track {
+        background: transparent;
+        border: none;
+    }
+    .date-time-picker-wheel::-webkit-scrollbar-thumb {
+        background: rgba(108, 99, 255, 0.4);
+        border-radius: 10px;
+    }
+    .date-time-picker-wheel::-webkit-scrollbar-thumb:hover {
+        background: var(--primary-color);
+    }
+    .dark .date-time-picker-wheel {
+        scrollbar-color: rgba(147, 137, 255, 0.45) transparent;
+    }
+    .dark .date-time-picker-wheel::-webkit-scrollbar-thumb {
+        background: rgba(147, 137, 255, 0.45);
+    }
+    .dark .date-time-picker-wheel::-webkit-scrollbar-thumb:hover {
+        background: var(--primary-color);
     }
 }
 
