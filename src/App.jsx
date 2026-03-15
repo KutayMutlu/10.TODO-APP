@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import './App.css';
 import { ToastContainer, toast } from 'react-toastify';
 import Swal from 'sweetalert2';
@@ -282,14 +283,21 @@ function App() {
           progressPercentage={progressPercentage}
         />
       </div>
-      <ToastContainer
-        theme={theme === "dark" ? "dark" : "light"}
-        limit={3}
-        autoClose={2000}
-        closeOnClick
-        draggable
-        draggableDirection="x"
-      />
+      {createPortal(
+        <div className="toast-portal-wrap" style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 10001 }}>
+          <div style={{ pointerEvents: 'auto', position: 'fixed', top: 0, right: 0, padding: '1em', width: 'fit-content', maxWidth: 'min(100vw, 420px)' }}>
+            <ToastContainer
+              theme={theme === "dark" ? "dark" : "light"}
+              limit={3}
+              autoClose={2000}
+              closeOnClick
+              draggable
+              draggableDirection="x"
+            />
+          </div>
+        </div>,
+        document.body
+      )}
       <footer className="footer">
         <p>{t.footerText} <span className="footer-name">Kutay Mutlu</span></p>
       </footer>

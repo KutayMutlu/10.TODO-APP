@@ -401,7 +401,7 @@ function Todo({
                     {...(isMobile ? { ...attributes, ...listeners } : {})}
                 >
                     <div className={`todo-lists ${isExpanded ? 'expanded' : ''} ${isArchived ? 'archived-item' : ''} ${(isCompleted || isArchived) ? 'is-completed' : ''}`}
-                        onClick={() => !isArchived && setIsExpanded(!isExpanded)}>
+                        onClick={() => setIsExpanded(!isExpanded)}>
                         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
                             <span
                                 className={`todo-text-content ${isExpanded ? 'full-text' : 'truncated-text'}`}

@@ -52,6 +52,10 @@ service cloud.firestore {
         && isExistingOwner();
     }
 
+    match /users/{userId}/prefs/{docId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

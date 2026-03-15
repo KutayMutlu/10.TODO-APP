@@ -1732,7 +1732,7 @@ body.todo-edit-overlay-open #root {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 250px;
+    max-width: 320px;
     color: var(--todo-text);
 }
 
@@ -1742,6 +1742,7 @@ body.todo-edit-overlay-open #root {
     max-height: 200px;
     overflow-y: auto;
     display: block;
+    max-width: calc(100% - 44px);
 }
 
 .todo-icons-container {
@@ -2025,7 +2026,7 @@ body.todo-edit-overlay-open #root {
     }
 
     .truncated-text {
-        max-width: 150px;
+        max-width: 220px;
     }
 
     .system-controls {
@@ -2099,6 +2100,11 @@ body.todo-edit-overlay-open #root {
 }
 
 /* Toast ve Profil */
+/* Düzenleme overlay (z-index: 9999) açıkken toast'lar blur arkasında kalmasın */
+.Toastify__toast-container {
+    z-index: 10001;
+}
+
 /* Silindi toast: mesaj üstte, Geri al butonu altta tam genişlik (kolay tıklanır) */
 .Toastify__toast .toast-undo-wrap {
     display: flex !important;

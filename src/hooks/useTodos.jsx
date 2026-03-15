@@ -13,18 +13,46 @@ import {
   writeBatch,
   where,
   Timestamp,
+  setDoc,
 } from 'firebase/firestore';
 import { toast } from 'react-toastify';
+import confetti from 'canvas-confetti';
 import { formatFirebaseDate } from '../utils/date';
 
+function fireCompleteConfetti() {
+  confetti({
+    particleCount: 80,
+    spread: 70,
+    origin: { y: 0.75 },
+    colors: ['#6c63ff', '#4ade80', '#fbbf24', '#38bdf8'],
+  });
+}
+
+/** Sıra belgesindeki id listesine göre todo listesini sıralar. Listede olmayan id'ler en sonda (createdAt desc) kalır. */
+function sortTodosByOrder(todosArray, orderIds) {
+  if (!orderIds || orderIds.length === 0) return todosArray;
+  const byId = new Map(todosArray.map((t) => [t.id, t]));
+  const ordered = [];
+  const seen = new Set();
+  for (const id of orderIds) {
+    const todo = byId.get(id);
+    if (todo) {
+      ordered.push(todo);
+      seen.add(id);
+    }
+  }
+  const rest = todosArray.filter((t) => !seen.has(t.id));
+  return [...ordered, ...rest];
+}
+
 export function useTodos({ user, t, playSound }) {
-  const [todos, setTodos] = useState([]);
+  const [rawTodos, setRawTodos] = useState([]);
+  const [orderIds, setOrderIds] = useState([]);
 
   useEffect(() => {
     if (!user) {
-      // Kullanıcı çıkışında listeyi temizlemek için gerekli
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- sync with external auth state
-      setTodos([]);
+      setRawTodos([]);
+      setOrderIds([]);
       return;
     }
 
@@ -34,7 +62,7 @@ export function useTodos({ user, t, playSound }) {
       orderBy('createdAt', 'desc')
     );
 
-    const unsubscribe = onSnapshot(
+    const unsubTodos = onSnapshot(
       q,
       (querySnapshot) => {
         const todosArray = [];
@@ -46,15 +74,60 @@ export function useTodos({ user, t, playSound }) {
             displayDate: formatFirebaseDate(data.createdAt),
           });
         });
-        setTodos(todosArray);
+        setRawTodos(todosArray);
       },
       (error) => {
         console.error('Firestore Hatası:', error);
       }
     );
 
-    return () => unsubscribe();
+    return () => unsubTodos();
   }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    const orderRef = doc(db, 'users', user.uid, 'prefs', 'order');
+    const unsubOrder = onSnapshot(
+      orderRef,
+      (snap) => {
+        setOrderIds(snap.data()?.todoIds ?? []);
+      },
+      () => setOrderIds([])
+    );
+    return () => unsubOrder();
+  }, [user]);
+
+  const todos = useMemo(
+    () => sortTodosByOrder(rawTodos, orderIds),
+    [rawTodos, orderIds]
+  );
+
+  const saveTodoOrder = useCallback(
+    async (orderedIds) => {
+      if (!user || !Array.isArray(orderedIds) || orderedIds.length === 0) return;
+      setOrderIds(orderedIds);
+      try {
+        await setDoc(doc(db, 'users', user.uid, 'prefs', 'order'), {
+          todoIds: orderedIds,
+        });
+      } catch (err) {
+        console.error('Sıra kaydedilemedi:', err);
+      }
+    },
+    [user]
+  );
+
+  const setTodos = useCallback(
+    (fnOrItems) => {
+      if (typeof fnOrItems === 'function') {
+        const next = fnOrItems(todos);
+        if (Array.isArray(next) && next.length > 0) {
+          saveTodoOrder(next.map((t) => t.id));
+        }
+      }
+    },
+    [todos, saveTodoOrder]
+  );
 
   const handleAddTodo = useCallback(
     async (newTodo) => {
@@ -174,7 +247,10 @@ export function useTodos({ user, t, playSound }) {
             isCompleted: newCompleted,
             completedAt: newCompleted ? serverTimestamp() : null,
           });
-          if (!todo.isCompleted) playSound('add');
+          if (newCompleted) {
+            playSound('complete');
+            fireCompleteConfetti();
+          }
         }
       } catch {
         // sessizce yut
@@ -239,7 +315,8 @@ export function useTodos({ user, t, playSound }) {
         (todo) => ids.includes(todo.id) && !todo.isArchived && !todo.isCompleted
       );
       if (toComplete.length === 0) return;
-       playSound('add');
+      playSound('complete');
+      fireCompleteConfetti();
       const batch = writeBatch(db);
       toComplete.forEach((todo) =>
         batch.update(doc(db, 'todos', todo.id), { isCompleted: true, completedAt: serverTimestamp() })

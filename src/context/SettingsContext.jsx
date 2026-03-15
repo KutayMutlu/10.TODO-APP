@@ -78,6 +78,29 @@ export function SettingsProvider({ children }) {
   const playSound = useCallback(
     (soundName) => {
       if (!isSoundEnabled) return;
+      if (soundName === 'complete') {
+        try {
+          const ctx = new (window.AudioContext || window.webkitAudioContext)();
+          if (ctx.state === 'suspended') ctx.resume();
+          const playTone = (freq, startTime, duration) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.frequency.value = freq;
+            osc.type = 'sine';
+            gain.gain.setValueAtTime(0.15, startTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+            osc.start(startTime);
+            osc.stop(startTime + duration);
+          };
+          playTone(523.25, 0, 0.12);
+          playTone(659.25, 0.1, 0.2);
+        } catch {
+          // Tarayıcı Web Audio desteklemiyorsa sessizce atla
+        }
+        return;
+      }
       try {
         const audio = new Audio(`/sounds/${soundName}.mp3`);
         audio.volume = 0.3;
