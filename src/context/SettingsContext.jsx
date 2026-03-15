@@ -8,6 +8,38 @@ import React, {
 } from 'react';
 import { translations } from '../constants';
 
+/** AudioBuffer'ı 16-bit PCM WAV olarak kodlar; diğer seslerle aynı Audio elementiyle çalınır (sessiz mod davranışı). */
+function encodeWav(buffer) {
+  const numChannels = 1;
+  const sampleRate = buffer.sampleRate;
+  const data = buffer.getChannelData(0);
+  const bytesPerSample = 2;
+  const blockAlign = numChannels * bytesPerSample;
+  const dataLength = data.length * bytesPerSample;
+  const headerLength = 44;
+  const buf = new ArrayBuffer(headerLength + dataLength);
+  const view = new DataView(buf);
+  const writeStr = (offset, str) => { for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i)); };
+  writeStr(0, 'RIFF');
+  view.setUint32(4, 36 + dataLength, true);
+  writeStr(8, 'WAVE');
+  writeStr(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * blockAlign, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, 16, true);
+  writeStr(36, 'data');
+  view.setUint32(40, dataLength, true);
+  for (let i = 0; i < data.length; i++) {
+    const s = Math.max(-1, Math.min(1, data[i]));
+    view.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+  }
+  return new Uint8Array(buf);
+}
+
 const SettingsContext = createContext(null);
 
 export function SettingsProvider({ children }) {
@@ -80,24 +112,35 @@ export function SettingsProvider({ children }) {
       if (!isSoundEnabled) return;
       if (soundName === 'complete') {
         try {
-          const ctx = new (window.AudioContext || window.webkitAudioContext)();
-          if (ctx.state === 'suspended') ctx.resume();
-          const playTone = (freq, startTime, duration) => {
+          const sampleRate = 44100;
+          const duration = 0.35;
+          const ctx = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, sampleRate * duration, sampleRate);
+          const playTone = (freq, startTime, dur) => {
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
             osc.connect(gain);
             gain.connect(ctx.destination);
             osc.frequency.value = freq;
             osc.type = 'sine';
-            gain.gain.setValueAtTime(0.15, startTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+            gain.gain.setValueAtTime(0.2, startTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, startTime + dur);
             osc.start(startTime);
-            osc.stop(startTime + duration);
+            osc.stop(startTime + dur);
           };
           playTone(523.25, 0, 0.12);
           playTone(659.25, 0.1, 0.2);
+          ctx.startRendering().then((buffer) => {
+            const wav = encodeWav(buffer);
+            const blob = new Blob([wav], { type: 'audio/wav' });
+            const url = URL.createObjectURL(blob);
+            const audio = new Audio(url);
+            audio.volume = 0.3;
+            audio.onended = () => URL.revokeObjectURL(url);
+            audio.onerror = () => URL.revokeObjectURL(url);
+            audio.play().catch(() => URL.revokeObjectURL(url));
+          }).catch(() => {});
         } catch {
-          // Tarayıcı Web Audio desteklemiyorsa sessizce atla
+          // sessizce yut
         }
         return;
       }
